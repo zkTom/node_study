@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>函数扩展</title>
+</head>
+<body>
+<script>
+    'use strict'
+    /**
+     * 1.函数扩展
+     * */
+    function fn(a,
+    ...b
+    )
+    {
+        console.log("a", a);
+        console.log("b", b);//数组
+        console.log("...b",...b
+    )
+        ;//直接输出
+    }
+    fn(1, 2, 3, 4, 5, 6);
+    /**
+     * 2.默认参数的写法
+     *
+     * */
+    function fn1(a, b=2) {
+        console.log("b", b);
+    }
+    fn1(1);
+    /**
+     * 3.箭头函数
+     * 3.1.如果只有一行代码可以省略{}
+     * eg:let fn1= () =>console.log("test");
+     * 3.2.只有一个参数可以省略()
+     * eg:let fn1= a =>console.log("a",a);
+     * 3.3.和正真的函数的区别
+     * 3.3.1.arrow不能使用new关键字，apply，call绑定无效
+     * 3.3.2.可以使用...扩展符，但是必须加括号
+     * eg:let fn2= (...a) =>console.log("a",a);
+     * fn2("T","O","M");
+     * 3.3.3.this指向问题
+     * 在普通函数中，只有在你调用该函数才可以确定this指向,this指向调用它的对象
+     * 在arrow函数中已经在定义函数的时候就确定了this指向,this指向定义时的上下文对象。
+     * 我这么理解arrow的this:
+     * 其实arrow是为了解决多个context不一致问题而改进的，
+     * arrow的this与其外部的this保持着一致从而有效解决多个context不一致的问题。
+     * */
+    //下面是两个例子
+    var o = {
+        name: "TOM",
+        fn: function () {
+            console.log(this)//o
+            setTimeout(function () {
+                console.log(this)//window
+            })//这里有多个context产生冲突，可以使用self=this;而arrow正是基于这一点进行了改进
+        }
+    }
+    o.fn();
+    let O = {
+        name: "OOOO",
+        fn: function(){
+            //arrow函数将本身的this与和它最近的外部函数所绑定的this（O）保持一致。
+            var fn1=() => console.log("arrow函数", this)//O
+            fn1();
+        }
+    }
+    /**
+     * 关于多个function this指向问题的理解。
+     * 思考：
+     * js创建一个函数的过程：
+     * 1.首先会创建一个包含global(window)以及各级别的变量对象（主要包含arguments）的作用域链，然后把它保存在函数内部的[[scope]]
+     * 2.当函数被调用的时候为函数创建一个context，并且会将this绑定到当前调用这个函数的对象，然后复制[[scope]]属性作为context的作用域链。
+     * 首先第一个this指向obj，是正确的;
+     * 在本质上obj.getAge()<==>obj.getAge.call(obj);
+     *       fn()<==>fn.call(window);
+     * obj.getAge()仅仅是绑定obj到getAge()的this，但是和别的函数是没有关系的
+     * 每个function的context都是互不相关的，所谓的函数调用其实是有一个arguments和运行时的this绑定对象
+     * 最好转化成fn.call(obj)这种形式更好理解;
+     * */
+    //多个context不一致出现的错误
+    var obj = {
+        birth: 1990,
+        getAge: function () {
+            var b = this.birth; // 1990
+            console.log("外部的", this)
+            var fn = function () {
+                console.log("里面的", this);
+                return new Date().getFullYear() - this.birth; // this指向window或undefined
+            };
+            return fn();
+        }
+    };
+     obj.getAge();
+</script>
+</body>
+</html>

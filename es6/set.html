@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>set扩展</title>
+</head>
+<body>
+<script>
+    'user strict'
+    /**
+     * Set:es6新增的数据结构,它类似于Array，是一个普通的constructor，其成员值都是唯一的，没有重复值。
+     * 1.初始化：var s=new Set([1,2,2,3,4]);
+     * 2.不添加重复值
+     * eg:var s=new Set();
+     * [1,2,2,3,4].map((x)=>s.add(x));
+     * for(i of s) console.log(i)//1,2,3,4
+     * 3.长度：s.size();
+     * 4.Set.prototype
+     * 4.1.Set.prototype.constructor
+     * 4.2.Set.prototype.size
+     * 4.3.Set.add(value)
+     * 4.4.Set.delete(value)
+     * 4.5.Set.has(value);
+     * 4.6.Set.clear();
+     * 5.Set转换成Array
+     * var s=new Set([1,2,3,4]);
+     * var arr=Array.from(s)
+     * 6.Set去重
+     * function dedupe(array){
+     *  return Array.from(new Set(array));
+     * }
+     * */
+//
+//        s.add(7);
+//        console.log(s)
+//        s.delete(7)
+//        console.log(s)
+//        console.log(s.has(7))
+
+</script>
+</body>
+</html>
