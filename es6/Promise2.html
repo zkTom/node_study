@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Promise链式调用</title>
+</head>
+<body>
+<script>
+    /**
+     * Promise的出现是为了解决多个回调嵌套的问题。
+     * 那么如何解决呢？
+     * 见下面的example
+     * */
+    //一般情况下我们都需要一些数据的输入处理，所以这里并不直接用Promise
+    var p=function (data) {
+        return new Promise(function (resolve, reject) {
+            if(1){
+                resolve(data);
+            }else{
+                reject(data);
+            }
+        });
+    }
+    //这里通过return 保持了Promise对象，从而保证回调函数的链式调用。
+    //仔细看这就好像是以同步的方式来调用了多个异步方法。
+    //最后的catch()是用来捕获其中某一个then（）出现的异常，只要出现异常就会以一种冒泡的形式进行传递
+    // 直到被捕获（这里被catch捕获）
+    //但是如果没有错误，就会跳过catch()继续执行
+    //之所以这样是：catch()仅仅是then（null,reject);的一个别名
+    p(1).then((data)=>{
+        console.log(data);
+        return p(2);
+    }).then((data)=>{
+        console.log(data);
+        return p(3);
+    }).catch((data)=>{
+        console.log(data);
+        return p(4);
+    }).then((data)=>{
+        console.log(data)
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Promise扩展</title>
+</head>
+<body>
+<script>
+    /**
+     * Promise是由ES6提供的一个constructor。代表将来可能发生的事件。
+     * 他最大的好处：
+     * 以同步的方式解决了异步操作，避免了层层的嵌套函数。更加容易控制整个回调流程。
+     * 1.初始化
+     * Promise的constructor接受一个带有res,rej的function，当一个promise执行的时候有3个装态，pending,resolved,rejected
+     * res()把pending改为resolve，rej()把pending改为rejected装态。
+     * 一个promise必须要有这两个装态(resolved,rejected)，否则该promise就处于等待装态。
+     * 那么如何处理这个装态改变的响应呢。
+     *   var p=new Promise(function (res, rej) {
+     *   if(1){
+     *       res({msg:"wanchengl"});
+     *   }else{
+     *       rej({msg:"shibail"});
+     *   }
+     * });
+     * 对装态改变的响应的回调处理。
+     * Promise.prototype.then(callback1,callback2);
+     * Promise.prototype.all(Promise);
+     * Promise.prototype.catch(callback);//
+     * p.then((res)=>{
+     *   console.log(res.msg)
+     *   },(rej)=>{
+     *   console.log(rej.msg)
+     * });
+     * */
+    var p=new Promise(function (res, rej) {
+        if(1){
+            res({msg:"wanchengl"});
+        }else{
+            rej({msg:"shibail"});
+        }
+    });
+    p.then((res)=>{
+        console.log(res.msg)
+    },(rej)=>{
+        console.log(rej.msg)
+    });
+</script>
+</body>
+</html>

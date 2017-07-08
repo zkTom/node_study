@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Promise对象转化</title>
+</head>
+<style>
+    .box{
+        width: 100px;
+        height: 100px;
+    }
+</style>
+<body>
+<div style="background:red;" class="box"></div>
+<div style="background: blue;" class="box"></div>
+<div style="background: green;" class="box"></div>
+<script>
+    /**
+     * 使用Promise.resolve()，可以将别的对象（ajax对象)转化为Promise对象。
+     *
+     * */
+    let fn = function (i, left) {
+        let speed = 10;
+        return Promise((res, rej) => {
+            function go(){
+                setTimeout(()=>{
+                    if(speed<left){
+                        oDiv[i].style.marginLeft=speed+"px";
+                        speed=speed+10;
+                        go();
+                    }else{
+                        res();
+                    }
+                },300)  ;
+            }
+        })
+
+    }
+    var oDiv=document.getElementsByName('div');
+    fn(0,200).then(()=>{
+        return fn(1,300);
+    }).then(()=>{
+        return fn(2,400);
+    }).catch((err)=>{
+        console.log(err)
+    });
+</script>
+</body>
+</html>
