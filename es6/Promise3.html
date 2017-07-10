@@ -19,24 +19,25 @@
      * 使用Promise.resolve()，可以将别的对象（ajax对象)转化为Promise对象。
      *
      * */
+    var oDiv=document.getElementsByTagName('div');
     let fn = function (i, left) {
         let speed = 10;
-        return Promise((res, rej) => {
+        return new Promise((res, rej) => {
             function go(){
-                setTimeout(()=>{
-                    if(speed<left){
+                if(speed<left){
+                    setTimeout(()=>{
                         oDiv[i].style.marginLeft=speed+"px";
                         speed=speed+10;
                         go();
-                    }else{
-                        res();
-                    }
-                },300)  ;
+                    },100);
+                }else{
+                    res();
+                }
             }
+            go();
         })
-
     }
-    var oDiv=document.getElementsByName('div');
+    //箭头函数不带大括号 自带return；
     fn(0,200).then(()=>{
         return fn(1,300);
     }).then(()=>{

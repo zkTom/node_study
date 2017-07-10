@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--suppress JSAnnotator -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Class</title>
+</head>
+<body>
+<script>
+    /**
+     * Class ColorPoint extends Point{
+     *  constructor(){
+     *      super();//调用父类构造函数。
+     *      super.xxx();//调用父类的普通函数。
+     *  }
+     * }
+     *  1.static 静态变量关键字
+     *  2.class declarations are not Hoisting(不会有变量提升效果)
+     *  也就是说必须先声明在调用
+     *  eg:var p = new Rectangle(); // ReferenceError
+     *  class Rectangle {}
+     *  3.unamed和named
+     *  eg:var r=class{};
+     *     var r= class r{};
+     *  4.class内的方法
+     *  4.1.只能有一个“constructor”方法
+     *  4.2.使用super();来使用parent的methods
+     *  4.3.
+     *
+     * */
+    class  Point {
+        //构造方法
+        constructor(x,y){
+            this.x=x;
+            this.y=y;
+        }
+
+         toString(){
+            return '('+this.x+','+this.y+')';
+        }
+    }
+    class ColorPoint extends Point{
+        constructor(x,y,color){
+            super(x,y);// 调用父类的constructor(x, y)
+            this.color=color;
+        }
+
+        toString(){
+            return this.color+' '+super.toString();
+        }
+    }
+    
+    var point =new ColorPoint(1,2,"red");
+   console.log(point.toString());
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generator异步处理</title>
+</head>
+<body>
+<script>
+    /**
+     * generator可以完全控制内部状态的变化，依次遍历这些状态。
+     * 1.generator和普通函数的两个不同点：
+     * 1.1.funciton*
+     * 1.2.function body 里面使用yield定义遍历器的每个成员。
+     * 2.generator执行流程
+     * 每当你调用Generator函数的时候，该函数并不执行，而是返回了一个遍历器。
+     * 注：每一个yield语句都会变成遍历器的一个成员。
+     * 之后，每调用一次next(),就从该函数的头部或者上一个停下来的位置执行。直到遇到了
+     * 这一个yield语句。简而言之，next()实现了对函数内部状态的访问。
+     *
+     * 可以用来分解多个耗时的操作，把它拆成N步.
+     * */
+    function* fn() {
+        yield 'hello';
+        yield  'world';
+        yield  {o:1+1};
+        return 'ending';
+    }
+    let f=fn();
+    console.log(f)
+    //每一次next的返回值都包括了value和done，但是next(param);param代表上一个yield的返回值
+    //value代表 当前yield后面的表达式的值。
+    //done表示是否已经遍历完毕。
+    console.log(f.next());//Object {value: "hello", done: false}
+    console.log(f.next());//Object {value: "world", done: false}
+    console.log(f.next());//Object {value: Object, done: false}
+    console.log(f.next());//Object {value: "ending", done: true}
+
+
+</script>
+</body>
+</html>
