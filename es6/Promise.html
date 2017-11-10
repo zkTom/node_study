@@ -11,9 +11,13 @@
      * 他最大的好处：
      * 以同步的方式解决了异步操作，避免了层层的嵌套函数。更加容易控制整个回调流程。
      * 1.初始化
-     * Promise的constructor接受一个带有res,rej的function，当一个promise执行的时候有3个装态，pending,resolved,rejected
-     * res()把pending改为resolve，rej()把pending改为rejected装态。
-     * 一个promise必须要有这两个装态(resolved,rejected)，否则该promise就处于等待装态。
+     * Promise的constructor接受一个带有resolve,reject的function，
+     * 当一个promise执行的时候有3个装态，pending,resolved,rejected
+     * resolve()把pending改为resolve，reject()把pending改为rejected装态。
+     * 一个Promise执行过程中：
+     * 1.from pending to resolved
+     * 2.from pending to rejected
+     * 3.keep pending because of some reasons
      * 那么如何处理这个装态改变的响应呢。
      *   var p=new Promise(function (res, rej) {
      *   if(1){

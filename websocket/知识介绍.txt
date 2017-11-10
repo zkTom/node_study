@@ -1,0 +1,5 @@
+websocket
+http ---ws
+https ---wss
+基于TCP的全双工通信
+

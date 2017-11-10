@@ -1,0 +1,15 @@
+ejs模板用法
+ <%= person.name%>
+ <% for(var key in person){ %>
+    <%- person[key] %>
+   <% } %>
+request 请求头包含的信息
+request.query
+一个obj包含客户端请求的查询字符串（即url后面的查询字符串）
+
+requset.body
+一个来自客户端的请求的body中传递过来的obj
+
+cookie
+名称，k/v 过期时间(ms)
+res.cookie('user',{username:re.query.name},{maxAge:1000*60});这是用来测试的这是用来测试的这是用来测试的

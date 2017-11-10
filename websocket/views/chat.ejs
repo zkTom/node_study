@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,user-scalable=no">
+        <title>demo</title>
+        <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="css/chat.css" />
+        <link rel="stylesheet" type="text/css" href="css/dialog.css">
+    </head>
+    
+    <body>
+        <div id="J_container">
+            <div id="chat-room container">
+                <!-- 消息显示区 start-->
+                <div class="message-box">
+                </div>
+                <!-- 消息显示区 end-->
+                <!-- 发送消息区 start-->
+                <main>
+                    <p class="main-content" contenteditable="true"></p>
+                    <button type="button" class="btn btn-primary btn-send">发送</button>
+                </main>
+                <!-- 发送消息区 end-->
+            </div>
+            <!--房间信息 start-->
+            <div class="chat-room-info">
+                <p>暂时没有用户</p>
+                <p>在线人数：0</p>
+            </div>
+            <!--房间信息 end-->
+        </div>
+        
+        <!-- 遮罩层 -->
+        <div class="dialog-wrapper">
+            <div class="dialog dialog-small">
+                <div class="dialog-header">
+                    <span class="dialog-title">登陆</span>
+                    <button class="dialog-headerbtn">关闭</button>
+                </div>
+                <div class="dialog-body">
+                    <form action="">
+                        <div class="form-item">
+                            <label class="form-label" for="username">昵称：</label>
+                            <div class="form-item-content">
+                                <input type="text" name="username" id="username" class="form-input" placeholder="输入您的用户名" maxlength="14" required="required" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="dialog-footer-wrapper">
+                    <div class="dialog-footer">
+                         <button class="disabled btn btn-default btn-cancel">取消</button>
+                         <button class="btn btn-success btn-ok">确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="socket.io.slim.js"></script>
+        <script src="js/dialog.js"></script>
+        <script>
+            //引入websocket.io ，在window下面挂载io模块
+            // 连接服务器，并且告诉服务器创建一个websocket连接
+            var socket = io.connect('http://localhost:3001');
+            var $btnSend= $(".btn-send");
+            var $message = $("main .main-content");
+            var $room=$(".chat-room-info");
+            var username,numbers=0;
+            // 发送消息
+            $btnSend[0].onclick=function(){
+                var data = {
+                    username:username,
+                    message:$message.text()
+                };
+                console.log(socket)
+                socket.emit("new msg", data);
+                generateItem(username,$message.text());
+            }
+            // 接受别人的消息
+            socket.on("new msg", function(data) {
+                var username = data.username;
+                var message  = data.message;
+                generateItem(username,message);
+            })
+            // 新用户加入聊天室
+            socket.on("user joined", function(data){
+                var username = data.username;
+                var numbers = data.numbers;
+                updateRoomInfo(username,numbers);
+            })
+            // 用户推出聊天室
+            socket.on('user left', function (data) {
+                var username = data.username;
+                var numbers = data.numbers;
+                updateRoomInfo(username,numbers);
+            });
+            function generateItem(username,message){
+                var htmlTemplate='<div class="row message-item clearfix">\
+                        <div class="col-md-2 img-wrapper">\
+                            <img src="3.jpg" alt="" class="img-responsive img-circle">\
+                        </div>\
+                        <div class="col-md-10" style="padding-left: 0;">\
+                            <h4 class="title">'+username+'</h4>\
+                            <p class="message-content fl">'+message+'</p>\
+                        </div>\
+                    </div>';
+                $(".message-box").append(htmlTemplate);
+            }
+            function updateRoomInfo(username,curNumbers){
+                var htmlTemplate;
+                if (numbers>curNumbers) {
+                    var htmlTemplate='<p>用户'+username+'离开房间</p>'+
+                        '<p>当前在线人数为：'+curNumbers+'</p>';
+                } else {
+                    var htmlTemplate='<p>用户'+username+'加入</p>'+
+                        '<p>当前在线人数为：'+curNumbers+'</p>';
+                }
+                numbers=curNumbers;
+                $room.append(htmlTemplate);
+            }
+        </script>
+</html>

@@ -20,5 +20,5 @@ client.on('data', function(data){
 client.on('close', function(data){
     console.log('客户端：连接断开');
 });
-//TODO
+//发送FIN=1的一个连接，用来释放一个连接
 client.end('你好，我是客户端');

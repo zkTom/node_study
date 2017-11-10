@@ -3,7 +3,8 @@
  */
 /**
  * net核心模块：可以实现TCP服务器及TCP客户端的建立。
- * net.
+ * net.Server：TCP server，内部通过socket来实现与客户端的通信。
+ * net.Socket：tcp/本地 socket的node版实现，它实现了全双工的stream接口。
  *
  *
  * */
@@ -20,31 +21,55 @@ var PORT = 3000;
 var HOST = '127.0.0.1';
 
 //每当收到新的connection触发createServer
-net.createServer(function (socket) {
+let server=net.createServer(function (socket) {
     console.log('服务端：收到来自客户端的请求');
+    let timeout=60000;//1min
+    socket.setTimeout(timeout);
+    socket.on('',function () {
+        console.log("服务端：连接断开");
+        socket.end();
+    });
     //接受到客户端数据时触发
     socket.on('data',function (data) {
         //获取数据和写入数据
         console.log('服务端：收到客户端数据，内容为{'+ data +'}');
         socket.write('你好，我是服务端');
     });
-
+    //连接断开时触发
     socket.on('close', function(){
         console.log('服务端：客户端连接断开close');
     });
-
+    //当连接另一侧发送了 FIN 包的时候触发(释放连接用的)
     socket.on('end', function(){
-        console.log('服务端：end');
+        console.log('服务端：释放当前链接end');
     });
     //服务器层出错时触发,（可能原因：无法绑定一个被占用端口或者无权限绑定端口）
     socket.on('error', function(error){
         console.log('服务端错误：',error.message);
     });
+})
 
-}).listen(PORT, HOST, function(){
+server.listen(PORT, HOST, function(){
     console.log('服务端：开始监听来自客户端的请求');
-}).on('connection', function(socket){
+})
+
+server.on('connection', function(socket){
     //socket对象既是可读流又是可写流，这就意味这当socket接受数据是会触发data事件。
     //socket.end('2. connection 触发\n');
     console.log("服务端：新建连接",socket.data);
-});;
+})
+
+server.close(function (error) {
+    //连接关闭时触发
+    /**
+     * 对正在处理中的客户端请求，服务器会等待它们处理完（或超时），然后再正式关闭。
+     * 正常关闭的同时，callback 会被执行，同时会触发 close 事件。
+     * 异常关闭的同时，callback 也会执行，同时将对应的 error 作为参数传入。（比如还没调用 server.listen(port) 之前，就调用了server.close()）
+     *
+     * */
+    if(error){
+        console.log( 'close回调：服务端异常：' + error.message );
+    }else{
+        console.log( 'close回调：服务端正常关闭' );
+    }
+});

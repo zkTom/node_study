@@ -1,0 +1,122 @@
+{
+    padding: 0;
+    margin: 0;
+}
+
+#J_container {
+    width: 400px;
+    height: 600px;
+    border: 1px solid blue;
+    border-radius: 5px;
+    margin: 50px auto;
+    background: #EDF3F9;
+    position: relative;
+}
+.chat-room-info{
+    width: 250px;
+    height: 600px;
+    border:1px solid green;
+    position: absolute;
+    top: 0;
+    left: 399px;
+    overflow: scroll;
+}
+.chat-room-info p{
+
+}
+.message-box {
+    width: 100%;
+    height: 450px;
+    overflow: scroll;
+    border-bottom: 1px solid red;
+}
+
+main {
+    width: 100%;
+    height: 150px;
+    position: relative;
+}
+
+main .btn-send {
+    position: relative;
+    float: right;
+    margin-right: 10px;
+}
+
+main .main-content {
+    width: 100%;
+    height: 100px;
+    padding: 5px;
+    border-top: 1px solid green;
+}
+
+.message-item .message-content {
+    padding: 9.5px;
+    margin: 0 30px 10px 0;
+    font-size: 13px;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.img-wrapper {
+    padding: 10px 5px 5px 20px;
+}
+
+.img-wrapper img {
+    width: 40px;
+    height: 40px;
+}
+
+.clearfix {}
+
+.clearfix:after {
+    content: ".";
+    line-height: 0;
+    display: block;
+}
+.form-item{
+    margin-bottom: 22px;
+}
+.form-label{
+    width: 80px;
+    text-align: right;
+    vertical-align: middle;
+    float: left;
+    font-size: 14px;
+    color: #48576a;
+    line-height: 1;
+    padding: 11px 12px 11px 0;
+    box-sizing: border-box;
+}
+.form-item-content{
+    margin-left: 80px;
+    line-height: 36px;  
+    position: relative;
+    font-size: 14px;
+}
+.form-input{
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    background-image: none;
+    border-radius: 4px;
+    border: 1px solid #bfcbd9;
+    box-sizing: border-box;
+    color: #1f2d3d;
+    display: inline-block;
+    font-size: inherit;
+    height: 36px;
+    line-height: 1;
+    outline: none;
+    padding: 3px 10px;
+    transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+    width: 100%;
+}
+.fl {
+    float: left;
+}
