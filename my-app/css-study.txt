@@ -1,0 +1,11 @@
+1.所有的单选按钮都应该使用一个name
+<label><input type="radio" name="outdoor"> Indoor</label>
+<label><input type="radio" name="outdoor"> Outdoor</label>
+2.每一个复选按钮都应该嵌套进label元素中。所有关联的复选按钮应该具有相同的name属性。
+<label><input type="checkbox" name="personality"> Loving</label>
+<label><input type="checkbox" name="personality"> Running</label>
+3.使用checked属性，你可以设置复选按钮和单选按钮默认被选中。
+<label><input type="checkbox" name="personality" checked> Loving</label>
+4. css样式的继承和覆盖（某些属性[font | line-height | ]）
+5. css样式比重。 行内样式 > ID > class
+6. 16进制 #000000 -> #FFFFFF RGB 分别代表2位 0是最没有任何颜色，F是最深的（FFFFFF白色）
