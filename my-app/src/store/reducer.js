@@ -1,8 +1,8 @@
 
 //图书馆的管理记事本
 const defaultState = {
-    val: '',
-    list: []
+    val: 'wo lai l',
+    list: [1, 2, 3, "zzzzk"]
 }
 //reducers 可以接受state, 但是绝不能修改state，只能深度拷贝原来的数据
 //Reducer必须是纯函数，固定的输入，产生固定的输出
