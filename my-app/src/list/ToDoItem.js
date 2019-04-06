@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
-
+import { SearchItem } from './style'
 class ToDoItem extends Component {
 	constructor(props){
-		super(props);
+        super(props);
+        this.itemClick = this.itemClick.bind(this)
 	}
  //只在组件挂在页面上时执行，也就是页面第一次加载得时候
   componentWillMount(){
@@ -35,16 +36,20 @@ class ToDoItem extends Component {
     //console.log('son componentDidUpdate')
   }
 	render(){
-	      //{console.log('item render')}
+          //{console.log('item render')}
+        const { item } = this.props;
+        const itemClick = this.itemClick
 		return (
-               <li
-                onClick={this.itemClick.bind(this)}
-                >{this.props.item}</li>
+            <SearchItem onClick={itemClick}>{ item }</SearchItem>
+            //    <li
+            //     onClick={this.itemClick.bind(this)}
+            //     >{this.props.item}</li>
 		);
 	}
 
 
   itemClick(index) {
+    console.log(this)
     this.props.deleteItem(this.props.index)
   }
 }

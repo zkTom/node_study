@@ -17,7 +17,21 @@ export const SearchWrapper = styled.div`
     border-radius: 40px;
     padding:  0 10px;
     color: #969696;
-
+    
+    .slide-enter{
+        width: 170px;
+        transition: all 0.2s ease-in-out;
+    }
+    .slide-enter-active{
+        width: 240px;
+    }
+    .slide-exit{
+        width: 240px;
+        transition: all 0.2s ease-in-out;
+    }
+    .slide-exit-active{
+        width: 170px;
+    }
 `
 
 export const SearchBtn = styled.a.attrs({
@@ -40,8 +54,14 @@ export const SearchInput = styled(Input).attrs(({ type = 'text' }) => ({
 }))`
     width: 170px;
     /* 在样式中注入属性 */
-    color: ${ props => props.inputColor || "#fff"}
-`
+    color: ${ props => props.inputColor || "#fff"};
+    &.focus {
+        width: 170px;
+    }
+    &.focused {
+        width: 250px;
+    }
+`;
 export const SearchListWrapper = styled.div`
     position: absolute;
     left: 0;

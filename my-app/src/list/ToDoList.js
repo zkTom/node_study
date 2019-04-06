@@ -1,8 +1,9 @@
 import React, { Component } from "react"
 import {connect} from 'react-redux'
+import { CSSTransition } from 'react-transition-group';
 import ToDoItem from './ToDoItem.js'
 import store  from '../store'
-import { SearchWrapper, SearchBtn, SearchInput, SearchListWrapper, SearchList, SearchItem} from '../list/style'
+import { SearchWrapper, SearchBtn, SearchInput, SearchListWrapper, SearchList} from '../list/style'
 import * as creators from '../store/actionCreators'
 
 class ToDoList extends Component {
@@ -15,7 +16,8 @@ class ToDoList extends Component {
           list: [],
           val: '',
           inputColor: 'palevioletred',
-          defaultValue: "biubiutest"
+          defaultValue: "biubiutest",
+          inProp: false
         }
         this.inputRef = React.createRef();
     }
@@ -27,30 +29,35 @@ class ToDoList extends Component {
         const { inputColor, defaultValue } = this.state;
         const { val, list } = this.props;//注入属性
         const { changeValue, addItem, deleteItem } = this.props;//注入方法
+        console.log(this.props);
 
         return (
             <div style={{position: "relative"}}>
-                <SearchWrapper> 
-                    <div>
-                        {/** 注入组件props  默认值：defaultValue defaultValue={ defaultValue}*/}
-                        <SearchInput  inputColor={inputColor} value={val || defaultValue}
-                        // ref 可以拿到当前的DOM节点
-                        ref={this.inputRef} onMouseEnter={() => {
-                            console.log(this.inputRef.current)}} onChange={changeValue}>
-                        </SearchInput>
-                        <SearchBtn onClick={addItem}>提交</SearchBtn>
-                    </div>
-                    <SearchListWrapper>
-                        <SearchList>
-                            { list.map((item, index) => {
-                                return (
-                                    // <SearchItem>1111</SearchItem>
-                                    <ToDoItem item={item} index={index} key={index} deleteItem={deleteItem}/>
-                                );
-                            }) }
-                        </SearchList>
-                    </SearchListWrapper>  
-                </SearchWrapper>  
+                    <SearchWrapper> 
+                        <div>
+                        <CSSTransition in={this.state.inProp} timeout={200} classNames="slide">
+                            {/** 注入组件props  默认值：defaultValue defaultValue={ defaultValue}*/}
+                            <SearchInput  className={ this.state.inProp ? "focused" : "focus" }
+                              inputColor={inputColor} value={val || defaultValue}
+                            // ref 可以拿到当前的DOM节点
+                            ref={this.inputRef} onMouseEnter={() => {
+                                console.log(this.inputRef.current)}} onChange={changeValue}
+                                onFocus={() => {this.setState({inProp: true})}}
+                                onBlur={() => {this.setState({inProp: false})}}>
+                            </SearchInput>
+                        </CSSTransition>
+                            <SearchBtn onClick={addItem}>提交</SearchBtn>
+                        </div>
+                        <SearchListWrapper>
+                            <SearchList>
+                                { list.map((item, index) => {
+                                    return (
+                                        <ToDoItem item={item} index={index} key={index} deleteItem={deleteItem}/>
+                                    );
+                                }) }
+                            </SearchList>
+                        </SearchListWrapper>  
+                    </SearchWrapper>  
             </div>
         //   <div >
         //     <input value={this.props.val} 
@@ -121,9 +128,9 @@ class ToDoList extends Component {
       }
 }
 //将store.state映射到props上
-const mapStateToProps = state => ({
-    val: state.val,
-    list: state.list
+const mapStateToProps = ({todoReducer}) => ({
+    val: todoReducer.val,
+    list: todoReducer.list
 })
 //将store.dispatch映射到props 
 const mapDispatchToProps = dispatch => ({
