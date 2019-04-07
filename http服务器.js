@@ -16,7 +16,7 @@
  *      res.end();
  *
  * */
-const  http=require('http');
+const http=require('http');
 const server=http.createServer();
 const util=require('util');
 
