@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title></title>
+	</head>
+	<body>
+			<div id="app">
+                <input id="account" placeholder="输入内容" v-model="value"/>
+                <p id="para">{{ value }}</p>
+            </div>
+	</body>
+    <script type="text/javascript" src="./Dep.js"></script>
+    <script type="text/javascript" src="./Observer.js"></script>
+    <script type="text/javascript" src="./Watcher.js"></script>
+    <script type="text/javascript" src="./Compile.js"></script>
+    <script type="text/javascript" src="./Vue.js"></script>
+    <script type="text/javascript">
+	const options = {
+        data: {
+            value: 'test string'
+        },
+        el: "#app"  
+    }
+    const app = new Vue(options);
+    </script>
+</html>
