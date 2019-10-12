@@ -34,3 +34,8 @@ const data = {
 }
 test();
 data.value = "test changed";
+/**
+ * nodeType 1 元素节点
+ * nodeType 3 文本节点
+ */
+

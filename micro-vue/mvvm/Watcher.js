@@ -11,7 +11,7 @@ function Watcher(vm, prop, callback) {
  * Will be called when a dependency changes.
  */
 Watcher.prototype.update = function() {
-	const value = this.vm.$data[this.prop]
+    const value = parsePath(this.vm.$data, this.prop);
 	const oldVal = this.value
 	if (value !== oldVal) {
 		this.value = value
@@ -26,7 +26,7 @@ Watcher.prototype.get = function() {
     Dep.target = this
     // 通知Dep列表进行依赖收集
     //因为属性被监听，这一步会执行监听器里的 get方法（触发对应属性的getter）
-	const value = this.vm.$data[this.prop]
+    const value = parsePath(this.vm.$data, this.prop);
 	Dep.target = null
 	return value
 }

@@ -20,8 +20,8 @@ Compile.prototype.nodeFragment = function(el) {
 	return fragment
 }
 Compile.prototype.compileNode = function(fragment) {
-    let childNodes = fragment.childNodes;
-	[ ...childNodes ].forEach((node) => {
+	let childNodes = fragment.childNodes
+	;[ ...childNodes ].forEach((node) => {
 		if (this.isElementNode(node)) {
 			this.compile(node)
 		}
@@ -29,8 +29,8 @@ Compile.prototype.compileNode = function(fragment) {
 		let reg = /\{\{(.*)\}\}/
 		let text = node.textContent
 
-		if (reg.test(text)) {
-			let prop = reg.exec(text)[1].trim();
+		if (this.isTextNode(node) && reg.test(text)) {
+			let prop = reg.exec(text)[1].trim()
 			this.compileText(node, prop) //替换模板
 		}
 
@@ -40,6 +40,7 @@ Compile.prototype.compileNode = function(fragment) {
 		}
 	})
 }
+// 编译Dom节点的指令以及其他（class, style等等）
 Compile.prototype.compile = function(node) {
 	let nodeAttrs = node.attributes
 	;[ ...nodeAttrs ].forEach((attr) => {
@@ -54,11 +55,11 @@ Compile.prototype.compile = function(node) {
 }
 // 编译v-model
 Compile.prototype.compileModel = function(node, prop) {
-	let val = this.vm.$data[prop]
+	let val = parsePath(this.vm.$data, prop);
 	this.updateModel(node, val)
 
 	new Watcher(this.vm, prop, (value) => {
-        console.log('watcher callback', value)
+		console.log('watcher callback', value)
 		this.updateModel(node, value)
 	})
 
@@ -66,13 +67,19 @@ Compile.prototype.compileModel = function(node, prop) {
 		let newValue = e.target.value
 		if (val === newValue) {
 			return
-		}
-		this.vm.$data[prop] = newValue
+        }
+        // 处理this.form.xxxx和this.xxxx
+        const props = prop.split(".");
+        let data = this.vm.$data;
+        for(let i = 0, len = props.length - 1; i < len; i++) {
+            data = data[props[i]];
+        }
+		data[props[props.length - 1]] = newValue
 	})
 }
 Compile.prototype.compileText = function(node, prop) {
-    let text = this.vm.$data[prop]
-	this.updateView(node, text);
+	let text = parsePath(this.vm.$data, prop);
+    this.updateView(node, text)
 	new Watcher(this.vm, prop, (value) => {
 		this.updateView(node, value)
 	})

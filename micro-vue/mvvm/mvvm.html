@@ -7,10 +7,13 @@
 	</head>
 	<body>
 			<div id="app">
-                <input id="account" placeholder="输入内容" v-model="value"/>
-                <p id="para">{{ value }}</p>
+                <input id="account" placeholder="输入内容" v-model="obj.value"/>
+                <p id="para">{{ obj.value }}</p>
+                <p>{{ form.name }}</p>
             </div>
+            <p id="test">Thru-hiking is great, but However,  is tricky.</p>
 	</body>
+    <script src="./helper.js"></script>
     <script type="text/javascript" src="./Dep.js"></script>
     <script type="text/javascript" src="./Observer.js"></script>
     <script type="text/javascript" src="./Watcher.js"></script>
@@ -19,7 +22,17 @@
     <script type="text/javascript">
 	const options = {
         data: {
-            value: 'test string'
+            value: "test string",
+            obj: {
+                value: 'test string'
+            },
+            form: {
+                name: 'llr',
+                view: {
+                    comp: 'card',
+                    location: 'src/views/card.vue'
+                }
+            }
         },
         el: "#app"  
     }
