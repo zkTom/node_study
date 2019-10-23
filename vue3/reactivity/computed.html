@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>computed demo</title>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+<script src="./reactivity.global.js"></script>
+<script>
+    const { ITERATE_KEY, computed, effect, isReactive, isReadonly, isRef, lock, markNonReactive, markReadonly, pauseTracking,
+        reactive, readonly, ref, resumeTracking, stop, toRaw, toRefs, unlock } = VueObserver;
+
+    // example 1
+    (function () {
+        console.log('-- example 1 --')
+        // 返回依赖属性操作之后的结果
+        const value = reactive({})
+        const cValue = computed(() => value.foo)
+        console.log(cValue.value)// undefined
+        value.foo = 1
+        console.log(cValue.value)// 1
+    })();
+    // example 2
+    (function () {
+        console.log('-- example 2 --')
+        // 惰性计算,在求值计算属性时，才会执行计算，不需要则不会计算
+        // 多次求值计算属性，不会重复计算，
+        // 只有当依赖属性再次变化且再次求值计算属性，才会执行
+        const value = reactive({})
+        const cValue = computed(() => {
+            console.log('call computed')
+            return value.foo
+        })
+        console.log(cValue.value)// undefined
+        value.foo = 1
+        console.log(cValue.value)// 1
+    })();
+    // example 3
+    (function () {
+        console.log('-- example 3 --');
+        // 计算属性的改变也可以触发effect
+        const value = reactive({})
+        const cValue = computed(() => value.foo)
+        let dummy
+        effect(() => dummy = cValue.value)
+        console.log(dummy)// undefined
+        value.foo = 1
+        console.log(dummy)
+    })();
+    // example 4
+    (function () {
+        console.log('-- example 4 --');
+        // 计算属性之间也可以互相依赖
+        // 一个effect可以依赖多个计算属性
+        const value = reactive({ foo: 0 })
+        const c1 = computed(() => value.foo)
+        const c2 = computed(() => c1.value + 1)
+        let dummy
+        effect(() => {
+            dummy = c1.value + c2.value
+        })
+        console.log(c1.value, c1)// 0
+        console.log(c2.value)// 1
+        console.log(dummy)// 1
+        value.foo++
+        console.log(c1.value)// 1
+        console.log(c2.value)// 2
+        console.log(dummy)// 3
+    })();
+    // example 5
+    (function () {
+        console.log('-- example 5 --');
+        const value = reactive({})
+        const cValue = computed(() => value.foo)
+        let dummy
+        effect(() => {
+            dummy = cValue.value
+        })
+        console.log(dummy)// undefined
+        value.foo = 1
+        console.log(dummy)// 1
+        stop(cValue.effect)
+        value.foo = 2
+        console.log(dummy)// 1
+    })();
+    // example 6
+    (function () {
+        // 设置getter/setter
+        const n = ref(1)
+        const plusOne = computed({
+            get: () => n.value + 1,
+            set: val => {
+                n.value = val - 1
+            }
+        })
+        let dummy
+        effect(() => {
+            dummy = n.value
+        })
+        console.log(dummy)// 1
+        plusOne.value = 0;
+        console.log(dummy)// -1
+    })();
+</script>
+
+</html>
