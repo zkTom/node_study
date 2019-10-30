@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas Demo</title>
+    <style>
+    #canvas {
+        background: #cccccc;
+        border: thin inset #aaaaaa;
+        display: block;
+        /* width: 800px;
+        height: 400px; */
+        margin: 50px auto 0;
+    }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        /**
+         * MARGIN 画布和圆盘之间距离
+         * RADIUS 圆半径
+         * NUMERAL_SPACING 表盘数字距离圆的距离
+         * HAND_RADIUS RAIDUS+NUERAL_SPACING 之和
+         * HAND_TRUNCATION 秒针距离圆盘的距离
+         * MINUTE_HAND_TRUNCATION 分针距离圆盘的距离
+         * HOUR_HAND_TRUNCATION 时针距离圆盘的距离
+         * FONT_HEIGHT 字体高度
+         * 圆的起始点是在圆的水平直径的右端点。
+         * */
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const FONT_HEIGHT = 15, MARGIN = 35;
+        const HAND_TRUNCATION = canvas.width / 25;
+        const HOUR_HAND_TRUNCATION = canvas.width / 10;
+        const MINUTE_HAND_TRUNCATION = canvas.width / 20;
+        const NUMERAL_SPACING = 20, RADIUS = canvas.width / 2 - MARGIN;
+        const HAND_RADIUS = RADIUS + NUMERAL_SPACING;
+
+        function drawCircle() {
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, RADIUS, 0, Math.PI * 2, true);
+            ctx.stroke();
+        }
+        function drawNumerals() {
+            const numerals = [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12];
+            let angle = 0, numeralWidth = 0;
+            numerals.forEach(numeral => {
+                angle = Math.PI / 6 * (numeral - 3);
+                numeralWidth = ctx.measureText(numeral).width;
+                ctx.fillText(numeral,
+                    canvas.width / 2 + Math.cos(angle) * (HAND_RADIUS) - numeralWidth / 2,
+                    canvas.height / 2 + Math.sin(angle) * (HAND_RADIUS) + FONT_HEIGHT / 3);
+            })
+        }
+        function drawCenter() {
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 5, 0, Math.PI * 2, true);
+            ctx.fill();
+        }
+        function drawHand(loc, type) {
+            // 弧长 * 比例 - Math.PI / 2(调整起始位置))
+            // 圆的坐标原点是（0，0），参数方程（r * cosq,r * sinq）q === angle
+            let angle = (Math.PI * 2) * (loc / 60) - Math.PI / 2;
+            let handRadius;
+            if(type === 'hour') {
+                handRadius = RADIUS - HAND_TRUNCATION - HOUR_HAND_TRUNCATION;
+            } else if(type === 'minute') {
+                handRadius = RADIUS - HAND_TRUNCATION - MINUTE_HAND_TRUNCATION;
+            } else {
+                handRadius = RADIUS - HAND_TRUNCATION;
+            }
+            ctx.moveTo(canvas.width / 2, canvas.height / 2);
+            ctx.lineTo(canvas.width / 2 + Math.cos(angle) * handRadius,
+                canvas.height / 2 + Math.sin(angle) * handRadius);
+            ctx.stroke();
+        }
+        function drawHands() {
+            let date = new Date(), hour = date.getHours();
+            hour = hour > 12 ? hour - 12 :hour;
+            // 时针正确的位置1小时5个格+剩余未过完的小时（小时的小数位计算）
+            drawHand(hour * 5 + (date.getMinutes() / 60) * 5, "hour", 0.5);
+            drawHand(date.getMinutes(), "minute", 0.5);
+            drawHand(date.getSeconds(), "second", 0.2);
+        }
+        function drawClock() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCircle();
+            drawNumerals();
+            drawCenter();
+            drawHands();
+        }
+        ctx.font = FONT_HEIGHT + 'px Arial';
+        let timer = setInterval(drawClock, 1000);
+    </script>
+</body>
+</html>
