@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>选中图片的指定区域</title>
+    <style>
+    #canvas {
+        background: #fff;
+        border: thin inset #aaaaaa;
+        display: block;
+        margin: 50px auto 0;
+    }
+    #rubber {
+        display: none;
+        position: absolute;
+        border: 3px solid blue;
+        cursor: crosshair;
+    }
+    </style>
+</head>
+<body>
+    <div id="controls"><input type="button" id="reset" value="重置"></div> 
+    <div id="rubber"></div>
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <script>
+        const reset = document.getElementById('reset'); 
+        const rubber = document.getElementById('rubber'); 
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        let p = {},rect = {};// p:起始点坐标， rect虚线框的坐标宽/高
+        let dragging = false;
+
+        function rubberStart(x, y) {
+            p.x = x;
+            p.y = y;
+            rect.x = x;
+            rect.y = y;
+            // move rubber
+            moveRubber();
+            showRubber();
+            dragging = true;
+        }
+        function rubberStretch(x, y) {
+            // rect x, y用来和初始点做比较计算正确的 width / height
+            rect.x = x < p.x ? x: p.x;
+            rect.y = y < p.y ? y: p.y;
+
+            rect.w = Math.abs(x - p.x);
+            rect.h = Math.abs(y - p.y);
+            moveRubber();
+            resizeRubber();
+        }
+        function rubberEnd() {
+            const box = canvas.getBoundingClientRect();
+            try {
+                // 将canvas的指定部分画到画布的指定位置
+                // ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                ctx.drawImage(canvas, rect.x - box.left,
+                            rect.y - box.top,
+                            rect.w,
+                            rect.h,
+                            0, 0, canvas.width, canvas.height);
+            } catch (error) {
+                
+            }
+            resetRubber();
+            rubber.style.width = 0;
+            rubber.style.height = 0;
+            hideRubber();
+
+            dragging = false;
+        }
+        function moveRubber() {
+            rubber.style.top = `${rect.y}px`;
+            rubber.style.left = `${rect.x}px`;
+        }
+        function resizeRubber() {
+            rubber.style.width = `${rect.w}px`;
+            rubber.style.height = `${rect.h}px`;
+        }
+        function hideRubber() {
+            rubber.style.display = 'none';
+        }
+        function showRubber() {
+            rubber.style.display = 'block';
+        }
+        function resetRubber() {
+            rect = { x: 0, y: 0, w: 0, h: 0 };
+        }
+        // 只有在canvas上才会响应mousedown事件
+        canvas.onmousedown = function (e) {
+            const x = e.clientX, y = e.clientY;
+            e.preventDefault();
+            rubberStart(x, y);
+        }
+        // mousemove 和mouseup在window上绑定而不是canvas??
+        window.onmousemove = function(e) {
+            const x = e.clientX, y = e.clientY;
+            e.preventDefault();
+            if (dragging) {
+                rubberStretch(x, y);
+            }
+        }
+        window.onmouseup = function(e) {
+            e.preventDefault();
+            rubberEnd();
+        }
+        reset.onclick = function(e) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        img.src = './image/minions.jpg';
+        img.onload = function() {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+    </script>
+</body>
+</html>
