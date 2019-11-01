@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas API</title>
+    <style>
+        #canvas {
+            background: #cccccc;
+            border: thin inset #aaaaaa;
+            display: inline-block;
+            /* width: 800px;
+        height: 400px; */
+            margin: 50px 20px;
+        }
+
+        .canvas {
+            display: inline-block;
+            border: thin inset #aaaaaa;
+            margin: 50px 20px;
+        }
+
+        .btn-group {
+            position: absolute;
+            top: 20px;
+            left: 460px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <canvas id="canvas1" class="canvas" width="400" height="400"></canvas>
+    <div class="btn-group">
+        <input type="button" id="repeat" value="repeat" />
+        <input type="button" id="repeat-x" value="repeat-x" />
+        <input type="button" id="repeat-y" value="repeat-y" />
+        <input type="button" id="no-repeat" value="no-repeat" />
+    </div>
+    <canvas id="canvas2" class="canvas" width="400" height="400"></canvas>
+    <canvas id="canvas3" class="canvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        // lineJoin 线条的连接部分使用的形状 "bevel" || "round" || "miter"
+        // lineWidth stroke时线条的宽度
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 20;
+        ctx.font = '24px Helvetica';
+        ctx.strokeStyle = 'goldenrod';
+        ctx.fillStyle = 'rgba(0,244,244,1)';
+        // ctx.fill
+        ctx.strokeRect(50, 50, 100, 100);
+        ctx.fillRect(150, 150, 100, 100);
+        // 创建线性渐变 (x0,y0)起始点，（x1,y1)终点
+        // CanvasGradient ctx.createLinearGradient(x0, y0, x1, y1);
+        let gradient = ctx.createLinearGradient(50, 250, 150, 250);
+        gradient.addColorStop(0, 'blue');
+        gradient.addColorStop(0.25, 'white');
+        gradient.addColorStop(0.5, 'purple');
+        gradient.addColorStop(0.75, 'red');
+        gradient.addColorStop(1, 'yellow');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(50, 250, 100, 100);
+        // 创建放射渐变 (x0, y0, r0)起始圆的位置,(x1, y1, r1)终止圆的位置，这两个圆弧以及所交集的范围画出放射区域
+        // CanvasGradient ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+        gradient = ctx.createRadialGradient(300, 50, 25, 300, 150, 45);
+        gradient.addColorStop(0, 'blue');
+        gradient.addColorStop(0.25, 'white');
+        gradient.addColorStop(0.5, 'purple');
+        gradient.addColorStop(0.75, 'red');
+        gradient.addColorStop(1, 'yellow');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(250, 50, 100, 100);
+        gradient = ctx.createRadialGradient(300, 300, 25, 300, 300, 50);
+        gradient.addColorStop(0, 'blue');
+        gradient.addColorStop(0.25, 'white');
+        gradient.addColorStop(0.5, 'purple');
+        gradient.addColorStop(0.75, 'red');
+        gradient.addColorStop(1, 'yellow');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(250, 250, 100, 100);
+    </script>
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas1');
+            const btnXY = document.getElementById('repeat');
+            const btnX = document.getElementById('repeat-x');
+            const btnY = document.getElementById('repeat-y');
+            const btnNo = document.getElementById('no-repeat');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            // 创建图案 image： image | canvas | video，repetition： repeat | repeat-x | repeat-y | no-repeat 重复
+            // CanvasPattern ctx.createPattern(image, repetition);
+            function fillCanvas(pattern) {
+                //必须每次都调用createPattern 该API没有setXXX的方法
+                const p = ctx.createPattern(img, pattern);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = p;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            btnXY.onclick = function () {
+                fillCanvas('repeat');
+            }
+            btnX.onclick = function () {
+                fillCanvas('repeat-x');
+            }
+            btnY.onclick = function () {
+                fillCanvas('repeat-y');
+            }
+            btnNo.onclick = function () {
+                fillCanvas('no-repeat');
+            }
+            img.src = './image/logo_32.png';
+            img.onload = function () {
+                fillCanvas('repeat');
+            }
+        })();
+    </script>
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas2');
+            const ctx = canvas.getContext('2d');
+            // 取消阴影效果 
+            //  shadowColor为透明。或者. shadowOffsetX = shadowOffsetY = shadowBLur = 0;
+            const SHADOW_COLOR = 'rgba(0, 0, 0, 0.7)';
+            function setIconShadow() {
+                ctx.shadowColor = undefined;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+                ctx.shadowBlur = 2;
+            }
+            function setIconSeletedShadow() {
+                ctx.shadowColor = SHADOW_COLOR;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowOffsetY = 4;
+                ctx.shadowBlur = 5;
+            }
+            function clearShadow() {
+                ctx.shadowColor = 'rgba(0, 0, 0, 1);'
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                ctx.shadowBlur = 0;
+            }
+            ctx.font = '24px Arial';
+            setIconShadow();
+            ctx.fillText('Hello World', 20, 50);
+            setIconSeletedShadow();
+            ctx.fillText('I am coming', 150, 50);
+            ctx.font = '30pt Arial';
+            ctx.lineWidth = 2;
+            ctx.strokeText('I am stroke text', 20, 90);
+            clearShadow();
+            // 2/3圆
+            ctx.beginPath();
+            ctx.arc(70, 150, 50, 0, Math.PI * 3 / 2);
+            ctx.closePath(); // 封闭图形，必须调用closePath()在绘制之前。
+            ctx.stroke();
+            //
+            ctx.beginPath();
+            ctx.arc(200, 150, 50, 0, Math.PI * 3 / 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.rect(20, 220, 100, 50);
+            ctx.stroke();
+            ctx.rect(50, 250, 100, 50);
+            ctx.stroke();
+        })();
+    </script>
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas3');
+            const ctx = canvas.getContext('2d');
+            function drawTrianglePath() {
+                // 清除当前路径的子路径。
+                // beginPath
+                //显示的封闭某个曲线或线段组成的图形
+                // closePath
+                // 向当前路径中添加一条子路径（点）
+                // moveTo
+                // 向当前路径中添加一条子路径（点），但是会保留之前的子路径
+                // lineTo
+                ctx.beginPath();
+                ctx.moveTo(50, 120);
+                ctx.lineTo(100, 200);
+                ctx.lineTo(10, 180);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+            function drawLines() {
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(30, 300);
+                ctx.lineTo(300, 300);
+                ctx.stroke();
+                ctx.beginPath();
+                // 真正要绘制一条1px的线，应该将该线段绘制在两个像素交接的地方
+                ctx.moveTo(30.5, 360.5);
+                ctx.lineTo(300.5, 360.5);
+                ctx.stroke();
+            }
+            ctx.fillStyle = 'blue';
+            ctx.strokeStyle = 'red';
+            drawTrianglePath();
+            drawLines();
+        })();
+
+    </script>
+</body>
+
+</html>
