@@ -214,13 +214,13 @@ module.exports = {
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
-			title: '首页', // html->head->title(使用template选项后不生效)
+			title: '首页', // html->head->title(使用template选项后要手动设置<title><%= htmlWebpackPlugin.options.title %></title>)
 			filename: 'index.html', // html文件输出位置
 			template: './src/template/index.html', // 指定使用的html模版
 			templateParameters: {}, // 使用模版引擎可以使用
 			inject: true, // js资源文件插入到文件的位置 true || 'head' || 'body' || false
 			favicon: './src/template/favicon.ico', // html的ico图标
-			meta: {}, // html->head->meta (使用template选项后不生效)
+			meta: {}, // html->head->meta
 			minify: true, // Boolean|Object html文件压缩规则
 			hash: true // 文件缓存
         }),
