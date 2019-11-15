@@ -1,6 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
-const MyPlugin = require('./src/myPlugin');
+const MyPlugin = require('./src/myPlugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 /**
  * optimize-css-assets-webpack-plugin
@@ -58,77 +58,115 @@ module.exports = {
 		rules: [
 			{
 				test: /\.s?css$/,
-				use: [
-					/**
-                     * style-loader 如何把css写入到html中，以及写入位置
-                     * injectType：
-                     * styleTag(default) 将css按照<style></style>注入到html中
-                     * singletonStyleTag 将css按照<style></style>注入到html中，但是会合并多个css
-                     * lazyStyleTag 将css按照<style></style>注入到html中,但是需要手动调用style.use()/style.unuse()
-                     * |lazySingletonStyleTag|linkTag
-                     * */
+				oneOf: [
+					{
+						// css-module
+						resourceQuery: /module/,
+						use: [
+							{
+								loader: MiniCssExtractPlugin.loader,
+								options: {
+									publicPath: '../',
+									// hmr: process.env.NODE_ENV === 'development',
+									hmr: true,
+									// if hmr does not work, this is a forceful method.
+									reloadAll: true
+								}
+							},
+							{
+								loader: 'css-loader',
+								options: {
+									importLoaders: 2,
+									modules: {
+										localIdentName: '[local]_[hash:base64:8]'
+									},
+									sourceMap: false
+								}
+							},
+							{
+								loader: 'sass-loader',
+								options: {
+									prependData: '@import "./src/assets/scss/variable.scss";',
+									sourceMap: false
+								}
+							},
+							'postcss-loader'
+						]
+					},
+					{
+						use: [
+							/**
+                             * style-loader 如何把css写入到html中，以及写入位置
+                             * injectType：
+                             * styleTag(default) 将css按照<style></style>注入到html中
+                             * singletonStyleTag 将css按照<style></style>注入到html中，但是会合并多个css
+                             * lazyStyleTag 将css按照<style></style>注入到html中,但是需要手动调用style.use()/style.unuse()
+                             * |lazySingletonStyleTag|linkTag
+                             * */
 
-					// { loader: 'style-loader', options: { injectType: 'lazyStyleTag' } },
-					{
-						loader: MiniCssExtractPlugin.loader,
-						options: {
-							publicPath: '../',
-							// hmr: process.env.NODE_ENV === 'development',
-							hmr: true,
-							// if hmr does not work, this is a forceful method.
-							reloadAll: true
-						}
-					},
-					/**
-                     * css-loader 识别@import url()/import
-                     * url: boolean/function 是否启用url()路径解析。
-                     * import: boolean/function 是否启用@import路径解析。
-                     * eg：@import 'style.css' => require('./style.css')
-                     *     @import url(style.css) => require('./style.css')
-                     * modules: Boolean|String|Object 是否使用css模块化
-                     * {
-                     *      mode: local|global
-                     *      localIdentName: [path][name]__[local] dev || [hash:base64] prod 形成的类名
-                     *      context:  查找css文件上下文
-                     *      hashPrefix: 添加css类名前缀
-                     * }
-                     * eg: 
-                     *  {
-                     *      mode: 'local',
-                     *      localIdentName: '[path][name]__[local]--[hash:base64:5]',
-                     *      context: path.resolve(__dirname, 'src'),
-                     *      hashPrefix: 'my-custom-hash',
-                     *  }
-                     * 生成css样式：.m20 -> ._-assets-css-home__m20--3PRqo
-                     * importLoaders： Number 在使用css-loader之前使用指定数量的loader对@import引入的资源进行预处理（postcss-loader/scss-loader）
-                     * 在样式嵌套引入的时候（css引入css,scss引入scss），会导致@import无法被正确预编译，importLoaders可以识别@import并进行预处理
-                     * */
+							// { loader: 'style-loader', options: { injectType: 'lazyStyleTag' } },
+							{
+								loader: MiniCssExtractPlugin.loader,
+								options: {
+									publicPath: '../',
+									// hmr: process.env.NODE_ENV === 'development',
+									hmr: true,
+									// if hmr does not work, this is a forceful method.
+									reloadAll: true
+								}
+							},
+							/**
+                             * css-loader 识别@import url()/import
+                             * url: boolean/function 是否启用url()路径解析。
+                             * import: boolean/function 是否启用@import路径解析。
+                             * eg：@import 'style.css' => require('./style.css')
+                             *     @import url(style.css) => require('./style.css')
+                             * modules: Boolean|String|Object 是否使用css模块化
+                             * {
+                             *      mode: local|global
+                             *      localIdentName: [path][name]__[local] dev || [hash:base64] prod 形成的类名
+                             *      context:  查找css文件上下文
+                             *      hashPrefix: 添加css类名前缀
+                             * }
+                             * eg: 
+                             *  {
+                             *      mode: 'local',
+                             *      localIdentName: '[path][name]__[local]--[hash:base64:5]',
+                             *      context: path.resolve(__dirname, 'src'),
+                             *      hashPrefix: 'my-custom-hash',
+                             *  }
+                             * 生成css样式：.m20 -> ._-assets-css-home__m20--3PRqo
+                             * importLoaders： Number 在使用css-loader之前使用指定数量的loader对@import引入的资源进行预处理（postcss-loader/scss-loader）
+                             * 在样式嵌套引入的时候（css引入css,scss引入scss），会导致@import无法被正确预编译，importLoaders可以识别@import并进行预处理
+                             * */
 
-					{
-						loader: 'css-loader',
-						options: {
-							importLoaders: 2,
-							url: false,
-							import: true,
-							modules: false,
-							sourceMap: false
-						}
-					},
-					{
-						// @import '~bootstrap';~：告诉系统这是来自node_modules模块的文件
-						// url() 的用法
-						loader: 'sass-loader',
-						options: {
-							// 使用node-sass|dart-sass,来决定如何编译sass文件，
-							// implementation: require('sass'), // 使用dart-sass（可以搭配fibers）
-							// implementation: require('node-sass'),// 使用node-sass
-							// String|Function 将scss文件追加到入口文件之前，在sass和环境变量有关/使用公用样式时可以使用。
-							prependData: '@import "./src/assets/scss/variable.scss";',
-							sourceMap: false,
-							sassOptions: {} // node-sass使用？
-						}
-					},
-					'postcss-loader'
+							{
+								loader: 'css-loader',
+								options: {
+									importLoaders: 2,
+									url: false,
+									import: true,
+									modules: false,
+									sourceMap: false
+								}
+							},
+							{
+								// @import '~bootstrap';~：告诉系统这是来自node_modules模块的文件
+								// url() 的用法
+								loader: 'sass-loader',
+								options: {
+									// 使用node-sass|dart-sass,来决定如何编译sass文件，
+									// implementation: require('sass'), // 使用dart-sass（可以搭配fibers）
+									// implementation: require('node-sass'),// 使用node-sass
+									// String|Function 将scss文件追加到入口文件之前，在sass和环境变量有关/使用公用样式时可以使用。
+									prependData: '@import "./src/assets/scss/variable.scss";',
+									sourceMap: false,
+									sassOptions: {} // node-sass使用？
+								}
+							},
+							'postcss-loader'
+						]
+					}
 				]
 			},
 			/*{
@@ -170,9 +208,9 @@ module.exports = {
 				// babel-loader只是把babel和webpack做一个通道，
 				// 处理es6/7或者更高级语法要使用babel的其他插件
 				test: /\.js$/,
-                exclude: /node_modules/,
-                // 配置太多，单独使用配置文件
-                use: ['babel-loader']
+				exclude: /node_modules/,
+				// 配置太多，单独使用配置文件
+				use: [ 'babel-loader' ]
 			}
 		]
 	},
@@ -223,10 +261,10 @@ module.exports = {
 			meta: {}, // html->head->meta
 			minify: true, // Boolean|Object html文件压缩规则
 			hash: true // 文件缓存
-        }),
-        new MyPlugin({
-            paths: ['injectScript.js']
-        }),        
+		}),
+		new MyPlugin({
+			paths: [ 'injectScript.js' ]
+		}),
 		new MiniCssExtractPlugin({
 			// Options similar to the same options in webpackOptions.output
 			// all options are optional
