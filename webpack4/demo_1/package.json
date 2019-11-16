@@ -9,6 +9,9 @@
     "debug": "node --inspect --inspect-brk node_modules/webpack/bin/webpack.js",
     "watch": "webpack --watch"
   },
+  "sideEffects": [
+    "./src/utils.js"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -38,6 +41,7 @@
   "dependencies": {
     "@babel/runtime": "^7.7.2",
     "@babel/runtime-corejs3": "^7.7.2",
+    "bootstrap": "^4.3.1",
     "core-js": "^3.4.0",
     "lodash": "^4.17.15",
     "regenerator-runtime": "^0.13.3"
