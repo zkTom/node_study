@@ -32,7 +32,8 @@ module.exports = function(api) {
               "regenerator": true,
               "useESModules": false
             }
-          ]
+          ],
+          "@babel/plugin-syntax-dynamic-import"
     ]
 
 	return {

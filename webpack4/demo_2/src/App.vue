@@ -1,20 +1,23 @@
 <template lang="html">
-   <div class="app" @click="onClick">
-       <span :class="$style.txt">I am root App </span>
-       <img :src="require('./assets/img/logo.png')" />
+   <div class="app">
+       <span :class="$style.txt" @click="onClick">I am root App </span>
+       <router-view></router-view>
    </div>
 </template>
 <script type='text/ecmascript-6'>
-import bgImg from "./assets/img/logo.png";
 export default {
-    name: "",
+    name: "App",
+    components: {},
     data() {
-        return {};
+        return {
+            flag: true
+        };
     },
     mounted() {},
     methods: {
         onClick() {
-            console.log('I was clicked');
+            console.log("I was clicked");
+            this.flag = !this.flag;
         }
     }
 };
@@ -23,15 +26,16 @@ export default {
 .app {
     font-size: 22px;
     color: blue;
-    img {
-        transform: rotate(45deg);
-    }
 }
 </style>
 <!-- 只有带module的才会进行模块化处理 -->
 <style module>
 :local(.txt) {
-font-size: 26px;
-  background: red;
+    font-size: 26px;
+    color: red;
+}
+:global(.txt) {
+    font-size: 32px;
+    color: orange;
 }
 </style>
