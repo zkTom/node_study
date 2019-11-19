@@ -46,7 +46,20 @@ function lazyLoadStyle() {
     }
     document.body.appendChild(div);
 }
-
+function loadMessageBox() {
+    const div = document.createElement('div');
+    div.innerText = 'click me load messagebox';
+    div.className = 'txt-active';
+    div.onclick = function() {
+        // 预加载
+        // 导出的module.default才是真正的导出模块
+        import(/* webpackPrefetch: true */ './message.js').then(({ default: showMessage }) => {
+            showMessage('webpackPrefetch: hello world')
+        });
+    }
+    document.body.appendChild(div);  
+}
 lazyLoadStyle();
+loadMessageBox();
 addSmallImg();
 addImg();
