@@ -5,7 +5,6 @@ function MyPlugin(options) {
     this.options = options;
 }
 MyPlugin.prototype.apply = function(compiler) {
-    // debugger;
     const paths = this.options.paths || [];
     // 入口配置完毕钩子
     compiler.hooks.entryOption.tap('MyPlugin', (context, entry) => {});
@@ -13,8 +12,8 @@ MyPlugin.prototype.apply = function(compiler) {
 	compiler.hooks.done.tap('MyPlugin', (stats) => {})
 	compiler.hooks.compilation.tap('MyPlugin', (compilation) => {
         // webpack > 4.0
-        debugger;
 		compilation.hooks.htmlWebpackPluginBeforeHtmlProcessing.tapAsync('MyPlugin', (data, cb) => {
+            // debugger;
             // Manipulate the content
             paths.forEach(path => data.assets.js.unshift(path))
 			// Tell webpack to move on

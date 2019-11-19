@@ -1,7 +1,8 @@
 // tree shaking
 import { cube } from '@/utils.js';
 console.log(cube(8));
-
+import $ from 'jQuery';
+console.log($('.title'))
 import bgImg from '@/assets/img/countrypath.jpg'
 import smallImg from '@/assets/img/logo.png'
 import '@/assets/scss/index.scss';

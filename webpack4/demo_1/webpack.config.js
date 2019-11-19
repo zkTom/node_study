@@ -43,7 +43,11 @@ module.exports = {
 		alias: {
 			'@': path.resolve(__dirname, 'src')
 		}
-	},
+    },
+    // 防止将某些 import 的包(package)打包到 bundle 中，而是在运行时(runtime)再去从外部获取这些扩展依赖(external dependencies)。
+    externals: {
+        "jQuery": "jQuery"
+    },
 	devtool: 'inline-source-map',
 	devServer: {
 		contentBase: path.join(__dirname, 'dist'),
@@ -268,7 +272,7 @@ module.exports = {
 			hash: true // 文件缓存
 		}),
 		new MyPlugin({
-			paths: [ 'injectScript.js' ]
+			paths: [ 'https://code.jquery.com/jquery-3.1.0.js' ]
 		}),
 		new MiniCssExtractPlugin({
 			// Options similar to the same options in webpackOptions.output
