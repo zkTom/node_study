@@ -118,6 +118,11 @@ module.exports = {
 							/**
                              * css-loader 识别@import url()/import
                              * url: boolean/function 是否启用url()路径解析。
+                             * ~：从node_modules解析资源文件
+                             * ～alias（通过resolve.alias配置）可以指定目录使用
+                             * eg: 
+                             * url(~module/image.png) => require('module/image.png')
+                             * url(~aliasDirectory/image.png) => require('otherDirectory/image.png')
                              * import: boolean/function 是否启用@import路径解析。
                              * eg：@import 'style.css' => require('./style.css')
                              *     @import url(style.css) => require('./style.css')
@@ -144,7 +149,7 @@ module.exports = {
 								loader: 'css-loader',
 								options: {
 									importLoaders: 2,
-									url: false,
+									url: true,
 									import: true,
 									modules: false,
 									sourceMap: false
