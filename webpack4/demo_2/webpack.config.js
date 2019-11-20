@@ -4,19 +4,21 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const ManifestPlugin = require('webpack-manifest-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const MyPlugin = require('./src/utils/myPlugin');
 const webpack = require('webpack')
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production'
 
 module.exports = {
-    mode: 'development',
+	mode: 'development',
 	entry: './src/index.js',
 	output: {
 		// publicPath: '',// 当在服务器配置虚拟路径映射时用来添加前缀
 		filename: '[name].bundle.js',
 		path: path.resolve(__dirname, 'dist'),
-        chunkFilename: '[name].chunk.[chunkhash:8].js'
+		chunkFilename: 'chunk-[name].[chunkhash:8].js'
 	},
 	resolve: {
 		alias: {
@@ -30,7 +32,10 @@ module.exports = {
 		// 热更新不刷新页面
 		hot: true,
 		hotOnly: true
-	},
+    },
+    externals: {
+        "jQuery": "jQuery"
+    },
 	module: {
 		rules: [
 			{
@@ -65,13 +70,13 @@ module.exports = {
                  */
 				loader: 'vue-loader',
 				options: {
-                    // 配置css-loader
-                    cssModules: {},
-                    loaders: {
-                        // 替换默认的模块对应的loader
-                        // js: 'coffee-loader'
-                    },
-                }
+					// 配置css-loader
+					cssModules: {},
+					loaders: {
+						// 替换默认的模块对应的loader
+						// js: 'coffee-loader'
+					}
+				}
 			},
 			{
 				test: /\.js$/,
@@ -130,7 +135,6 @@ module.exports = {
 								loader: 'css-loader',
 								options: {
 									importLoaders: 2,
-									url: false,
 									import: true,
 									modules: false,
 									sourceMap: false
@@ -161,42 +165,65 @@ module.exports = {
 						}
 					}
 				]
-            },
-            {
-                test: /\.(eot|woff2?|ttf|svg)$/,
-                use: [
-                  {
-                    loader: "url-loader",
-                    options: {
-                      name: "[name]-[hash:5].[ext]",
-                      limit: 5000, // fonts file size <= 5KB, use 'base64'; else, output svg file
-                      publicPath: "fonts/",
-                      outputPath: "fonts/"
-                    }
-                  }
-                ]
-              }
+			},
+			{
+				test: /\.(eot|woff2?|ttf|svg)$/,
+				use: [
+					{
+						loader: 'url-loader',
+						options: {
+							name: '[name]-[hash:5].[ext]',
+							limit: 5000, // fonts file size <= 5KB, use 'base64'; else, output svg file
+							publicPath: 'fonts/',
+							outputPath: 'fonts/'
+						}
+					}
+				]
+			}
 		]
     },
-    optimization: {
-        usedExports: true,
+    // webpack官方多页面例子
+    // https://github.com/webpack/webpack/blob/master/examples/many-pages/README.md
+	optimization: {
+		usedExports: true,
 		// 压缩js代码到一行
-		minimize: isProd ? true: false,
+		minimize: isProd ? true : false,
 		minimizer: [ new TerserPlugin({}), new OptimizeCSSAssetsPlugin({}) ],
 		splitChunks: {
 			// initial 只打包同步引入代码，async 只打包异步引入代码，all分割打包所有内容
-			chunks: 'all',
-			minSize: 10000, // 超过最小值则会进行代码分割，
-			// maxSize: 0, // 超过最大值，则会进行模块二次划分
-			minChunks: 1, // >= 1, 最小被几个入口引入的次数
+            chunks: 'all',
+            minSize: 0,
 			cacheGroups: {
-                default: false,
-                // 项目公用js
-				common: {
-                    name: 'chunk-common',
+                // default: false, ??? 
+                /**
+                 * 对于单页面来说，只有一个html页面
+                 * 假如：
+                 * main: index.js
+                 * component: about,home, dialog（about,home是业务组件，dialog是公共组件）
+                 * 通用模块：common
+                 * 第三方util: lodash,moment
+                 * 1. 要使用dynamic import 按需加载多个组件
+                 * 2. lodash和moment多次使用但是只打包一次
+                 * 3. about和home如果公用代码，则会提共有部分代码
+                 * 4. 对于一些特殊框架（UI框架），也可以单独打包
+                 * 5. 对于自己项目的公共模块（公共组件/工具函数），单独打包
+                 */
+                vendors: {
+                    name: 'vendors',
+                    test: /[\\/]node_modules[\\/]/,
+                    priority: 10
+                },
+                elementUI: {
+                    name: 'elementUI', // split elementUI into a single package
+                    priority: 30, // the weight needs to be larger than libs and app or it will be packaged into libs or app
+                    test: /[\\/]node_modules[\\/]_?element-ui(.*)/ // in order to adapt to cnpm
+                },
+				commons: {
+                    test: /(src\/utils\/common|src\/components)/,// 将该文件夹下的文件分块打包，这是我们自己的公共代码模块
+                    name: 'commons',
 					minChunks: 2,
-					priority: -20,
-					chunks: 'initial',
+					priority: 20,
+					chunks: 'all',// 所有的函数公共方法打包到一起，不论initial/async
 					reuseExistingChunk: true
 				}
 			}
@@ -207,7 +234,10 @@ module.exports = {
 			title: '首页',
 			template: './src/template/index.html',
 			filename: 'index.html'
-		}),
+        }),
+        new MyPlugin({
+            paths: ['https://code.jquery.com/jquery-3.1.0.js']
+        }),
 		new MiniCssExtractPlugin({
 			// Options similar to the same options in webpackOptions.output
 			// all options are optional
@@ -243,6 +273,7 @@ module.exports = {
          */
 		new VueLoaderPlugin(),
 		new CleanWebpackPlugin(),
-		new webpack.HotModuleReplacementPlugin()
+        new webpack.HotModuleReplacementPlugin(),
+        new ManifestPlugin()
 	]
 }

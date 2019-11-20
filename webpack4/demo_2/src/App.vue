@@ -1,6 +1,7 @@
-<template lang="html">
+<template>
    <div class="app">
        <span :class="$style.txt" @click="onClick">I am root App </span>
+       <el-button type="primary">el button</el-button>
        <router-view></router-view>
    </div>
 </template>
@@ -18,6 +19,7 @@ export default {
         onClick() {
             console.log("I was clicked");
             this.flag = !this.flag;
+            throw 'I am app';
         }
     }
 };
