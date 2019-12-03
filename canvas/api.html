@@ -284,8 +284,38 @@
             // 制作三次贝塞尔曲线
             // (cpx, cpy) 控制点1，(cp2x, cp2y)控制点2，(x, y) 锚点
             // bezierCurveTo(double cpx, double cpy, double cp2x, double cp2y, double x, double y);
-            const endPoints = [ { x: 30, y:70 }, { x: 330, y: 270 } ],
-                controlPoints = [ { x: 30, y: 250 }, { x: 350, y: 70 } ];
+            // const endPoints = [ { x: 30, y:70 }, { x: 330, y: 270 } ],
+            //     controlPoints = [ { x: 30, y: 250 }, { x: 350, y: 70 } ];
+            const AXIS_MARGIN = 40, HORIZONTAL_TICK_SPACING = 10, VERTICAL_TICK_SPACING = 10,
+                AXIS_ORIGIN = { x: AXIS_MARGIN, y: canvas.height - AXIS_MARGIN },
+                AXIS_TOP = AXIS_MARGIN,
+                AXIS_RIGHT = canvas.width - AXIS_MARGIN,
+                AXIS_WIDTH = AXIS_RIGHT - AXIS_ORIGIN.x,
+                AXIS_HEIGHT = AXIS_ORIGIN.y - AXIS_TOP,
+                NUM_VERTICAL_TICKS = AXIS_HEIGHT / VERTICAL_TICK_SPACING,
+                NUM_HORIZONTAL_TICKS = AXIS_WIDTH / HORIZONTAL_TICK_SPACING,
+                GRID_STROKE_STYLE = 'lightblue',
+                GRID_SPACING = 10,
+                CONTROL_POINT_RADIUS = 5,
+                CONTROL_POINT_STROKE_STYLE = 'blue',
+                CONTROL_POINT_FILL_STYLE = 'rgba(255,255,0, 0.5)',
+                END_POINT_STROKE_STYLE = 'navy',
+                END_POINT_FILL_STYLE = 'rgba(0, 255, 0, 0.5)',
+                GUIDEWIRE_STROKE_STYLE = 'rgba(0, 0, 230, 0.4)',
+                // 保存拖动起始点坐标
+                mousedown = {},
+                // 保存拖动区域的width/height/x/y
+                rubberbandRect = {};
+
+            let drawingImageData = null,
+                // 是否是起始拖拽
+                dragging = false,
+                // 在拖拽完毕后，是否是在拖动控制点
+                draggingPoint = false,
+                endPoints = [ {}, {} ],
+                controlPoints = [ {}, {} ],
+                editing = false,
+                guidewires = false;
 
             // **************functions****************
             function drawGrid(color, stepx, stepy) {
@@ -304,8 +334,50 @@
                     ctx.stroke();
                 }
             }
+            // 辅助线
+            function drawGuideLine(x, y) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 230, 0.8)';
+                ctx.lineWidth = 0.5;
+                drawHorLine(y);
+                drawVertLine(x);
+            }
+            function drawHorLine(y) {
+                ctx.beginPath();
+                ctx.moveTo(0, y + 0.5);
+                ctx.lineTo(canvas.width, y + 0.5)
+                ctx.stroke();
+            }
+            function drawVertLine(x) {
+                ctx.beginPath();
+                ctx.moveTo(x + 0.5, 0);
+                ctx.lineTo(x + 0.5, canvas.height);
+                ctx.stroke();
+            }
+            function windowToCanvas(x, y) {
+                const bbox = canvas.getBoundingClientRect();
+                return { x: x - bbox.left * (canvas.width  / bbox.width),
+                            y: y - bbox.top  * (canvas.height / bbox.height)
+                        };
+            }
+            // Save and restore drawing surface
+            function saveDrawingSurface() {
+            drawingImageData = ctx.getImageData(0, 0,
+                                    canvas.width, canvas.height);
+            }
+
+            function restoreDrawingSurface() {
+                ctx.putImageData(drawingImageData, 0, 0);
+            }
+            // Rubber bands 更新拖动区域的width/height/x/y
+            function updateRubberbandRectangle(loc) {
+                rubberbandRect.width = Math.abs(loc.x - mousedown.x);
+                rubberbandRect.height = Math.abs(loc.y - mousedown.y);
+                // 相对于起始点左移动/右移动，分别对应不同坐标
+                rubberbandRect.left = loc.x > mousedown.x ? mousedown.x : loc.x;
+                rubberbandRect.top = loc.y > mousedown.y ? mousedown.y : loc.y;
+            }
             function drawBezierCurve() {
-                ctx.strokeStyle = 'blue';
+                ctx.strokeStyle = CONTROL_POINT_STROKE_STYLE;
                 ctx.beginPath();
                 ctx.moveTo(endPoints[0].x, endPoints[0].y);
                 ctx.bezierCurveTo(controlPoints[0].x, controlPoints[0].y,
@@ -313,32 +385,156 @@
                     endPoints[1].x, endPoints[1].y);
                 ctx.stroke();
             }
+            function updateEndAndControlPoints() {
+                endPoints[0].x = rubberbandRect.left;
+                endPoints[0].y = rubberbandRect.top;
+                endPoints[1].x = rubberbandRect.left + rubberbandRect.width;
+                endPoints[1].y = rubberbandRect.top + rubberbandRect.height;
+
+                controlPoints[0].x = rubberbandRect.left;
+                controlPoints[0].y = rubberbandRect.top + rubberbandRect.height;
+                controlPoints[1].x = rubberbandRect.left + rubberbandRect.width;
+                controlPoints[1].y = rubberbandRect.top;
+            }
+            // 绘制拖拽区域
+            function drawRubberbandShape(loc) {
+                updateEndAndControlPoints();
+                drawBezierCurve();
+            }
+            function updateRubberband(loc) {
+                updateRubberbandRectangle(loc);
+                drawRubberbandShape(loc);
+            }
+            function drawEndPoint(index) {
+                ctx.beginPath();
+                ctx.arc(endPoints[index].x, endPoints[index].y, CONTROL_POINT_RADIUS, 0 , Math.PI * 2, false);
+                ctx.stroke();
+                ctx.fill();
+            }
+
             function drawEndPoints() {
-                ctx.strokeStyle = 'blue';
-                ctx.fillStyle = 'red';
-                
-                endPoints.forEach(point => {
-                    ctx.beginPath();
-                    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2, false);
-                    ctx.stroke();
-                    ctx.fill();
-                })
+                ctx.save();
+                ctx.strokeStyle = END_POINT_STROKE_STYLE;
+                ctx.fillStyle = END_POINT_FILL_STYLE;
+
+                drawEndPoint(0);
+                drawEndPoint(1);
+                ctx.stroke();
+                ctx.fill();
+                ctx.restore();
+            }
+            function drawControlPoint(index) {
+                ctx.beginPath();
+                ctx.arc(controlPoints[index].x, controlPoints[index].y, CONTROL_POINT_RADIUS, 0, Math.PI * 2, false);
+                ctx.stroke();
+                ctx.fill();
             }
             function drawControlPoints() {
-                ctx.strokeStyle = 'yellow';
-                ctx.fillStyle = 'blue';
-                controlPoints.forEach(point => {
+                ctx.save();
+                ctx.strokeStyle = CONTROL_POINT_STROKE_STYLE;
+                ctx.fillStyle = CONTROL_POINT_FILL_STYLE;
+                drawControlPoint(0);
+                drawControlPoint(1);
+                ctx.stroke();
+                ctx.fill();
+                ctx.restore();
+            }
+            function drawControlAndEndPoints(loc) {
+                drawControlPoints();
+                drawEndPoints();
+            }
+            // 选中锚点
+            function cursorInEndPoint(loc) {
+                let pt;
+                controlPoints.forEach(function(point) {
                     ctx.beginPath();
-                    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2, Math.PI * 2, false);
-                    ctx.stroke();
-                    ctx.fill();
+                    ctx.arc(point.x, point.y, CONTROL_POINT_RADIUS, 0, Math.PI * 2, false);
+                    if (ctx.isPointInPath(loc.x, loc.y)) {
+                        pt = point;
+                    }
                 })
+                return pt;
+            }
+            // 选中控制点
+            function cursorInControlPoint(loc) {
+                let pt;
+
+                controlPoints.forEach(function(point) {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, CONTROL_POINT_RADIUS, 0, Math.PI * 2, false);
+                    if(ctx.isPointInPath(loc.x, loc.y)) {
+                        pt = point;
+                    }
+                })
+
+                return pt;
+            }
+            function updateDraggingPoint(loc) {
+                draggingPoint.x = loc.x;
+                draggingPoint.y = loc.y;
+            }
+            // *********event handlers******************
+            canvas.onmousedown = function(e) {
+                const loc = windowToCanvas(e.clientX, e.clientY);
+
+                e.preventDefault();
+                // 处于编辑状态可以拖动控制点,
+                if(!editing) {
+                    // 保存当前画布状态
+                    saveDrawingSurface();
+                    mousedown.x = loc.x;
+                    mousedown.y = loc.y;
+                    updateRubberbandRectangle(loc);
+                    dragging = true;
+                } else {
+                    draggingPoint = cursorInControlPoint(loc);
+                    if (!draggingPoint) {
+                        draggingPoint = cursorInEndPoint(loc);
+                    }
+                }
+            }
+            canvas.onmousemove = function(e) {
+                const loc = windowToCanvas(e.clientX, e.clientY);
+
+                if (dragging || draggingPoint) {
+                    e.preventDefault();
+                    restoreDrawingSurface();
+                    if(guidewires) {
+                        drawGuideLine(loc.x, loc.y);
+                    }
+                }
+                if(dragging) {
+                    updateRubberband(loc);
+                    drawControlAndEndPoints();
+                } else if (draggingPoint) {
+                    updateDraggingPoint(loc);
+                    drawControlAndEndPoints();
+                    drawBezierCurve();
+                }
+            }
+            canvas.onmouseup = function(e) {
+                const loc = windowToCanvas(e.clientX, e.clientY);
+
+                restoreDrawingSurface();
+
+                if(!editing) {
+                    updateRubberband(loc);
+                    drawControlAndEndPoints();
+                    dragging = false;
+                    editing = true;
+                } else {
+                    if (draggingPoint) {
+                        drawControlAndEndPoints();
+                    } else {
+                        editing = false;
+                    }
+                    drawBezierCurve();
+                    draggingPoint = undefined;
+                }
             }
             //***************Initialization**************
-            drawGrid("lightgray", 10, 10);
-            drawControlPoints();
-            drawEndPoints();
-            drawBezierCurve();
+            ctx.strokeStyle = 'red';
+            drawGrid(GRID_STROKE_STYLE, GRID_SPACING, GRID_SPACING);
         })()
     </script>
     <script>
