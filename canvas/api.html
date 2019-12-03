@@ -11,8 +11,6 @@
             background: #cccccc;
             border: thin inset #aaaaaa;
             display: inline-block;
-            /* width: 800px;
-        height: 400px; */
             margin: 50px 20px;
         }
 
@@ -26,6 +24,14 @@
             position: absolute;
             top: 20px;
             left: 460px;
+        }
+        .btn-group-1 {
+            margin-left: 20px;
+            width: 400px;
+        }
+        .select {
+            margin-right: 20px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -42,6 +48,41 @@
     <canvas id="canvas2" class="canvas" width="400" height="400"></canvas>
     <canvas id="canvas3" class="canvas" width="400" height="400"></canvas>
     <canvas id="canvas4" class="canvas" width="400" height="400"></canvas>
+    <canvas id="canvas5" class="canvas" width="400" height="400"></canvas>
+    <div class="btn-group-1">
+        Sides:
+        <select class="select" name="polygon-sides" id="polygon-sides">
+            <option value="4">4</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+            <option value="20">20</option>
+        </select>
+        StartAngle:
+        <select class="select" name="polygon-start-angle" id="polygon-start-angle">
+                <option value="0">0</option>
+                <option value="22.5">22.5</option>
+                <option value="45">45</option>
+                <option value="67.5">67.5</option>
+                <option value="90">90</option>
+        </select>
+        <br />
+        fillColor: 
+        <select class="select" name="polygon-fill-color" id="polygon-fill-color">
+                <option value='rgba(255,0,0,0.5)'>semi-transparent red</option>
+                <option value='green'>green</option>
+                <option value='rgba(0,0,255,0.5)'>semi-transparent blue</option>
+                <option value='orange'>orange</option>
+                <option value='rgba(100,140,230,0.5)'>semi-transparent cornflowerblue</option>
+                <option value='goldenrod' selected>goldenrod</option>
+                <option value='navy'>navy</option>
+                <option value='purple'>purple</option>
+        </select>
+        Edit: 
+        <input type="checkbox" id="polygon-edit" />
+    </div>
+    <canvas id="canvas6" class="canvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -210,13 +251,235 @@
         })();
 
     </script>
-        <script>
-            (function () {
-                const canvas = document.getElementById('canvas3');
-                const ctx = canvas.getContext('2d');
-                // todo 圆的API
-            })()
-        </script>
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas4');
+            const ctx = canvas.getContext('2d');
+            // 平方贝塞尔曲线（quadratic），是由三个点定义的，最后形成一个二次曲线。
+            // (cpx, cpy)控制点， (x, y)是锚点，如果路径中有最后一个点则该点也是锚点。
+            // void ctx.quadraticCurveTo(cpx, cpy, x, y);
+            ctx.fillStyle = 'blue';
+            ctx.strokeStyle = 'yellow';
+
+            ctx.shadowColor = 'rgba(50, 50, 50, 1)'
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 4;
+
+            ctx.lineWidth = 20;
+            ctx.lineCap = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(120.5, 130);
+            ctx.quadraticCurveTo(150.8, 130, 160.6, 150.5);
+            ctx.quadraticCurveTo(190, 250.0, 210.5, 160.5);
+            ctx.quadraticCurveTo(200, 100.5, 290, 70.5);
+            ctx.stroke();
+        })()
+    </script>
+    <script>
+        (function() {
+            const canvas = document.getElementById('canvas5');
+            const ctx = canvas.getContext('2d');
+            // 制作三次贝塞尔曲线
+            // (cpx, cpy) 控制点1，(cp2x, cp2y)控制点2，(x, y) 锚点
+            // bezierCurveTo(double cpx, double cpy, double cp2x, double cp2y, double x, double y);
+            const endPoints = [ { x: 30, y:70 }, { x: 330, y: 270 } ],
+                controlPoints = [ { x: 30, y: 250 }, { x: 350, y: 70 } ];
+
+            // **************functions****************
+            function drawGrid(color, stepx, stepy) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 0.5;
+                for (let i = stepx + 0.5; i < canvas.width; i += stepx) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = stepy + 0.5; i < canvas.height; i += stepy) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+            }
+            function drawBezierCurve() {
+                ctx.strokeStyle = 'blue';
+                ctx.beginPath();
+                ctx.moveTo(endPoints[0].x, endPoints[0].y);
+                ctx.bezierCurveTo(controlPoints[0].x, controlPoints[0].y,
+                    controlPoints[1].x, controlPoints[1].y,
+                    endPoints[1].x, endPoints[1].y);
+                ctx.stroke();
+            }
+            function drawEndPoints() {
+                ctx.strokeStyle = 'blue';
+                ctx.fillStyle = 'red';
+                
+                endPoints.forEach(point => {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2, false);
+                    ctx.stroke();
+                    ctx.fill();
+                })
+            }
+            function drawControlPoints() {
+                ctx.strokeStyle = 'yellow';
+                ctx.fillStyle = 'blue';
+                controlPoints.forEach(point => {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2, Math.PI * 2, false);
+                    ctx.stroke();
+                    ctx.fill();
+                })
+            }
+            //***************Initialization**************
+            drawGrid("lightgray", 10, 10);
+            drawControlPoints();
+            drawEndPoints();
+            drawBezierCurve();
+        })()
+    </script>
+    <script>
+        (function() {
+            const canvas = document.getElementById('canvas6');
+            const ctx = canvas.getContext('2d');
+            const sideSelect = document.getElementById("polygon-sides"),
+                startAngleSelect = document.getElementById("polygon-start-angle"),
+                fillStyleSelect = document.getElementById("polygon-fill-color"),
+                editSelect = document.getElementById('polygon-edit'),
+                mousedown = {},
+                Point = function(x, y) {
+                    this.x = x;
+                    this.y = y;
+                }
+                let drawingSurfaceImageData = null,
+                    dragging = false,
+                    draggingOffsetX,
+                    draggingOffsetY,
+                    editing = false;
+                //**************functions*************
+                function drawOuterCircle(centerX, centerY, radius) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, Math.PI * 2, 0);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+                function getPolygonPoints(centerX, centerY, radius, sides, startAngle = 0) {
+                    const points = [];
+                    let angle = startAngle;
+                    for (let i = 0; i < sides; i++) {
+                        const point = new Point(centerX + radius * Math.sin(angle), centerY - radius * Math.cos(angle));
+                        points.push(point);
+                        angle += Math.PI * 2 / sides;
+                    }
+                    return points;
+                }
+                function createPolygonPath(centerX, centerY, radius, sides, startAngle) {
+                    const points = getPolygonPoints(centerX, centerY, radius, sides, startAngle);
+                    ctx.beginPath();
+                    ctx.moveTo(points[0].x, points[0].y);
+                    for( let i = 1; i < sides; i++) {
+                        ctx.lineTo(points[i].x, points[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                function eraseCanvas() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                function rePaint(){
+                    // 先清除画布再重新绘制
+                    eraseCanvas();
+                    drawOuterCircle(p0.x, p0.y, r0);
+                    createPolygonPath(p0.x, p0.y, r0, sides, startAngle);
+                }
+                function windowToCanvas(x, y) {
+                    const bbox = canvas.getBoundingClientRect();
+                    return { x: x - bbox.left * (canvas.width  / bbox.width),
+                                y: y - bbox.top  * (canvas.height / bbox.height)
+                            };
+                }
+                // *********Dragging*************
+                function startDragging(loc) {
+                    mousedown.x = loc.x;
+                    mousedown.y = loc.y;
+                }
+                function startEditing() {
+                    canvas.style.cursor = 'pointer';
+                    editing = true;
+                }
+                function stopEditing() {
+                    canvas.style.cursor = 'crosshair';
+                    editing = false;
+                }
+
+                sideSelect.onchange = function(value) {
+                    sides = parseInt(sideSelect.value, 10);
+                    rePaint();
+                }
+                startAngleSelect.onchange = function() {
+                    startAngle = Math.PI / 180 * parseInt(startAngleSelect.value, 10);
+                    rePaint();
+                }
+                fillStyleSelect.onchange = function() {
+                    ctx.fillStyle = fillStyleSelect.value;
+                    rePaint();
+                }
+                editSelect.onchange = function() {
+                    if (editSelect.checked) {
+                        startEditing();
+                    } else {
+                        stopEditing();
+                    }
+                }
+                canvas.onmousedown = function(e) {
+                    const loc = windowToCanvas(e.clientX, e.clientY);
+
+                    e.preventDefault();
+
+                    if(editing) {
+                        if (ctx.isPointInPath(loc.x, loc.y)) {
+                            startDragging(loc);
+                            // 一个多边形不需要确认当前选中对象。
+                            dragging = true;
+                            // 计算拖拽点到初始圆心距离
+                            draggingOffsetX = loc.x - p0.x;
+                            draggingOffsetY = loc.y - p0.y;
+                        }
+                    } 
+                }
+                canvas.onmousemove = function(e) {
+                    const loc = windowToCanvas(e.clientX, e.clientY);
+
+                    e.preventDefault();
+
+                    if (editing && dragging) {
+                        // 移动圆心坐标
+                        p0.x = loc.x - draggingOffsetX;
+                        p0.y = loc.y - draggingOffsetY;
+                        rePaint();
+                    } else {
+                        // 不是编辑模式但是在拖拽
+                        if (dragging) {
+                            // nothing to do
+                        }
+                    }
+                }
+                canvas.onmouseup = function(e) {
+                    dragging = false;
+                }
+                // ******************initalization**************
+                ctx.fillStyle = fillStyleSelect.value;
+                let sides = parseInt(sideSelect.value, 10);
+                let startAngle = parseInt(startAngleSelect.value, 10);
+                const p0 = new Point(200, 200);
+                const r0 = 150;
+                drawOuterCircle(p0.x, p0.y, r0);
+                createPolygonPath(p0.x, p0.y, r0, sides, startAngle);
+        })()
+    </script>
 </body>
 
 </html>
