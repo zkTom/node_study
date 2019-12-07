@@ -4,118 +4,413 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>选中图片的指定区域</title>
+    <title>图片裁剪例子</title>
     <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    .crop-container {
+        position: relative;
+        width: 600px;
+        height: 400px;
+        margin: 50px auto;
+    }
+    .crop-container-modal {
+        background: rgba(0,0,0,.5);
+        cursor: move;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
+        user-select: none;
+    }
     #canvas {
-        background: #fff;
-        border: thin inset #aaaaaa;
-        display: block;
-        margin: 50px auto 0;
+        border: 1px solid red;
+        position: absolute;
+        top: 0;
+        left: 100px;
     }
     #rubber {
+        background-color: #fff;
+        opacity: 0.3;
+        border: 1px solid #39f;
         display: none;
         position: absolute;
-        border: 3px solid blue;
+        z-index: 1;
         cursor: crosshair;
+    }
+
+    .rubber-border .line {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: .1;
+    }
+    .rubber-border .point {
+        border-radius: 100%;
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        opacity: .75;
+        background-color: #39f;
+    }
+    .line-top {
+        top: -3px;
+        left: 0;
+        height: 5px;
+        cursor: n-resize;
+    }
+    .point-1 {
+        top: -4px;
+        left: -4px;
+        cursor: nw-resize;
+    }
+    .point-2 {
+        top: -5px;
+        left: 50%;
+        margin-left: -3px;
+        cursor: n-resize;
+    }
+    .point-3 {
+        top: -4px;
+        right: -4px;
+        cursor: ne-resize;
+    }
+    .point-4 {
+        top: 50%;
+        left: -4px;
+        margin-top: -4px;
+        cursor: w-resize;
+    }
+    .point-5 {
+        top: 50%;
+        right: -4px;
+        margin-top: -4px;
+        cursor: e-resize;
+    }
+    .point-6 {
+        bottom: -4px;
+        left: -4px;
+        cursor: sw-resize;
+    }
+    .point-7 {
+        bottom: -4px;
+        left: 50%;
+        margin-left: -4px;
+        cursor: s-resize;
+    }
+    .point-8 {
+        bottom: -4px;
+        right: -4px;
+        cursor: se-resize;
     }
     </style>
 </head>
 <body>
-    <div id="controls"><input type="button" id="reset" value="重置"></div> 
-    <div id="rubber"></div>
-    <canvas id="canvas" width="600" height="400"></canvas>
+    <div id="controls">
+        <input type="button" id="reset" value="重置">
+            选择图片：<input type="file" name="uploadFile" id="uploadFile" accept="image/*" />
+        <button id="exportBtn">导出</button>
+    </div> 
+    <div class="crop-container">
+        <div class="crop-container-modal"></div>
+        <canvas id="canvas" width="400" height="400"></canvas>
+        <div id="rubber">
+            <span class="rubber-border">
+                <span class="line line-top "></span>
+                <span class="line line-right"></span>
+                <span class="line line-bottom"></span>
+                <span class="line line-left"></span>
+                <span class="point point-1"></span>
+                <span class="point point-2"></span>
+                <span class="point point-3"></span>
+                <span class="point point-4"></span>
+                <span class="point point-5"></span>
+                <span class="point point-6"></span>
+                <span class="point point-7"></span>
+                <span class="point point-8"></span>
+            </span>
+        </div>
+    </div>
     <script>
+        /**
+         * 改造这个例子变成图片裁剪的基本版
+         * 1. 拖拽图片
+         * 2. 放大缩小图片(todo)
+         * 3. 旋转图片(todo)
+         * 4. 导出图片（压缩图片）
+         * 5. 拖拽橡皮筋选框(ok)
+         * 6. 增加，减小橡皮筋选框(ok，但是不太流畅)
+         * */
+        const container = document.getElementsByClassName('crop-container')[0];
+        const points = document.getElementsByClassName('point');
         const reset = document.getElementById('reset'); 
         const rubber = document.getElementById('rubber'); 
         const canvas = document.getElementById('canvas');
+        const uploadFile = document.getElementById('uploadFile');
+        const exportBtn = document.getElementById('exportBtn');
         const ctx = canvas.getContext('2d');
-        const img = new Image();
-        let p = {},rect = {};// p:起始点坐标， rect虚线框的坐标宽/高
-        let dragging = false;
-
-        function rubberStart(x, y) {
-            p.x = x;
-            p.y = y;
-            rect.x = x;
-            rect.y = y;
-            // move rubber
-            moveRubber();
-            showRubber();
-            dragging = true;
+        const box = canvas.getBoundingClientRect();
+        const Point = function(x,y) {
+            this.x = x; 
+            this.y = y;
         }
-        function rubberStretch(x, y) {
-            // rect x, y用来和初始点做比较计算正确的 width / height
-            rect.x = x < p.x ? x: p.x;
-            rect.y = y < p.y ? y: p.y;
-
-            rect.w = Math.abs(x - p.x);
-            rect.h = Math.abs(y - p.y);
-            moveRubber();
-            resizeRubber();
+        // 顺时针顺序定义
+        const arr = [
+            { canChangeX: true, canChangeY: true, changeCropTypeX: 1, changeCropTypeY: 1 },
+            { canChangeX: false, canChangeY: true, changeCropTypeY: 1 },
+            { canChangeX: true, canChangeY: true, changeCropTypeX: 2, changeCropTypeY: 1},
+            { canChangeX: true, canChangeY: false, changeCropTypeX: 1 },
+            { canChangeX: true, canChangeY: false, changeCropTypeX: 2 },
+            { canChangeX: true, canChangeY: true, changeCropTypeX: 1, changeCropTypeY: 2 },
+            { canChangeX: false, canChangeY: true, changeCropTypeY: 2 },
+            { canChangeX: true, canChangeY: true, changeCropTypeX: 2, changeCropTypeY: 2 },
+        ]
+        // 橡皮框的边界点坐标
+        const startPoint = new Point(0, 0);
+        // 容器距离外边界的水平竖直距离
+        const {left: containerOffsetX, top: containerOffsetY } = container.getBoundingClientRect();
+        // x,y 是相对于窗口的距离， width/height
+        const rubberRect = {
+            x: 0 + box.left,
+            y: 0 + box.top,
+            width: 150,
+            height: 150
+        };
+        const prevRubberRect = {};
+        let dragging = false,
+            changing = false,
+            draggingOffsetX = 0,
+            draggingOffsetY = 0;
+        // 坐标转换，都以canvas左上角为单位
+        function windowToCanvas(x, y) {
+            const bbox = canvas.getBoundingClientRect();
+            return { 
+                x: x - bbox.left * (canvas.width  / bbox.width),
+                y: y - bbox.top  * (canvas.height / bbox.height)
+            };
         }
-        function rubberEnd() {
-            const box = canvas.getBoundingClientRect();
-            try {
-                // 将canvas的指定部分画到画布的指定位置
-                // ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-                ctx.drawImage(canvas, rect.x - box.left,
-                            rect.y - box.top,
-                            rect.w,
-                            rect.h,
-                            0, 0, canvas.width, canvas.height);
-            } catch (error) {
-                
+        // 坐标逆转 转为以window窗口左上角
+        function canvasToWindow(x, y) {
+            const bbox = canvas.getBoundingClientRect();
+            return {
+                x: x + bbox.left * (canvas.width  / bbox.width),
+                y: y + bbox.top  * (canvas.height / bbox.height)
             }
-            resetRubber();
-            rubber.style.width = 0;
-            rubber.style.height = 0;
-            hideRubber();
+        }
+        function rubberRectStart(x, y) {
+            // 计算拖拽点到初始圆心距离
+            draggingOffsetX = x - rubberRect.x;
+            draggingOffsetY = y - rubberRect.y;
+            // 移动到初始位置
+            moveRubberRect();
+            // 显示
+            showRubberRect();
+            dragging = true;
 
+        }
+        function rubberRectStretch(x, y) {
+            rubberRect.x = x - draggingOffsetX;
+            rubberRect.y = y - draggingOffsetY;
+
+             // 水平超出左边界
+             if (rubberRect.x - box.x < 0) {
+                rubberRect.x = box.x;
+            }
+            // 水平超出右边界
+            if (rubberRect.x + rubberRect.width > box.x + box.width )  {
+                startPoint.x = box.x + box.width - rubberRect.width;
+                rubberRect.x = box.x + box.width - rubberRect.width;
+            }
+            // 垂直超过上边界
+            if (rubberRect.y - box.y < 0) {
+                rubberRect.y = box.y;
+            }
+            // 垂直超过下边界
+            if (rubberRect.y + rubberRect.height > box.y + box.height) {
+                rubberRect.y = box.y + box.height - rubberRect.height;
+            }
+            moveRubberRect();
+        }
+
+        function rubberRectEnd() {
+            const box = canvas.getBoundingClientRect();
+            // 将canvas的指定部分画到画布的指定位置
+            // ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            // ctx.drawImage(canvas, rubberRect.x - box.left,
+            //                 rubberRect.y - box.top,
+            //                 rubberRect.width,
+            //                 rubberRect.height,
+            //             0, 0, canvas.width, canvas.height);
             dragging = false;
         }
-        function moveRubber() {
-            rubber.style.top = `${rect.y}px`;
-            rubber.style.left = `${rect.x}px`;
+        // 移动rubberRect 位置
+        function moveRubberRect() {
+            // rubber.style.left = `${rubberRect.x - containerOffsetX}px`;
+            // rubber.style.top = `${rubberRect.y - containerOffsetY}px`;
+            rubber.style.transform = `translate(${rubberRect.x - containerOffsetX}px, ${rubberRect.y - containerOffsetY}px)`;
         }
-        function resizeRubber() {
-            rubber.style.width = `${rect.w}px`;
-            rubber.style.height = `${rect.h}px`;
+        
+        // 调整rubberRect 宽高
+        function resizeRubberRect() {
+            // ？？？？？？
+            rubber.style.width = `${rubberRect.width}px`;
+            rubber.style.height = `${rubberRect.height}px`;
         }
-        function hideRubber() {
-            rubber.style.display = 'none';
+        // 隐藏 rubberRect
+        function hideRubberRect() {
+            rubber.style.display = 'none'
         }
-        function showRubber() {
+        // 显示rubberRect
+        function showRubberRect() {
             rubber.style.display = 'block';
         }
-        function resetRubber() {
-            rect = { x: 0, y: 0, w: 0, h: 0 };
+        //
+        function resetRubberRect() {
+            rubberRect.x = 0;
+            rubberRect.y = 0;
+            rubberRect.width = 0;
+            rubberRect.height = 0;
         }
-        // 只有在canvas上才会响应mousedown事件
-        canvas.onmousedown = function (e) {
-            const x = e.clientX, y = e.clientY;
-            e.preventDefault();
-            rubberStart(x, y);
-        }
-        // mousemove 和mouseup在window上绑定而不是canvas??
-        window.onmousemove = function(e) {
-            const x = e.clientX, y = e.clientY;
-            e.preventDefault();
-            if (dragging) {
-                rubberStretch(x, y);
+        /**
+         *   增大/缩小橡皮框
+         * prevPoint: 拖拽起始点
+         * curPoint:  拖拽终点
+         * options:
+         *      canChangeX 能否拉伸x方向
+         *      canChangeY 能否拉伸y方向
+         *      element: 1. 线 2. 上/左面的点 3. 中间的点 4. 下/右边的点 (没用到)
+         *      changeCropTypeX x轴基准点类型 1. 左边界线 2. 右边界线
+         *      changeCropTypeY y轴基准点类型 1. 上边界线 2. 下边界线
+         **/
+        function changeRubberRectPosAndSize(prevPoint, curPoint, options = {}) {
+            let dX, dY;
+            const { canChangeX, canChangeY, changeCropTypeX, changeCropTypeY } = options;
+            // 能否拉伸x方向
+            if(canChangeX) {
+                if (changeCropTypeX === 1) {
+                    // 左边界线
+                    dX = prevPoint.x - curPoint.x;
+                    rubberRect.width = prevRubberRect.width + dX;
+                    rubberRect.x = curPoint.x;
+                } else if (changeCropTypeX === 2) {
+                    // 右边界线
+                    dX = curPoint.x - prevPoint.x;
+                    rubberRect.width = prevRubberRect.width + dX;
+                    rubberRect.x = curPoint.x - rubberRect.width;
+                }
             }
+            // 能否拉伸y方向
+            if (canChangeY) {
+                if (changeCropTypeY === 1) {
+                    // 上边界线
+                    dY = prevPoint.y - curPoint.y;
+                    rubberRect.height = prevRubberRect.height + dY;
+                    rubberRect.y = curPoint.y;
+                } else if (changeCropTypeY === 2) {
+                    // 下边界线
+                    dY = curPoint.y - prevPoint.y;
+                    rubberRect.height = prevRubberRect.height + dY;
+                    rubberRect.y = curPoint.y - rubberRect.height;
+                }
+            }
+        }
+        // 设置边框点击拖拽监听器
+        function setRubberRectBorderClickListener() {
+            arr.forEach(function(options, index) {
+                points[index].onmousedown = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const x = e.clientX;
+                    const y = e.clientY;
+                    startPoint.x = x;
+                    startPoint.y = y;
+                    prevRubberRect.x = x;
+                    prevRubberRect.y = y;
+                    prevRubberRect.width = rubberRect.width;
+                    prevRubberRect.height = rubberRect.height;
+                    changing = true;
+                }
+                points[index].onmousemove = function(e) {
+                    e.preventDefault();
+
+                    if (changing) {
+                        const x = e.clientX;
+                        const y = e.clientY;
+                        
+                        changeRubberRectPosAndSize(startPoint, new Point(x, y), options);
+                        resizeRubberRect();
+                        moveRubberRect();
+                    }
+                }
+                points[index].onmouseup = function(e) {
+                    changing = false;
+                }
+            })
         }
         window.onmouseup = function(e) {
             e.preventDefault();
-            rubberEnd();
+            rubberRectEnd();
+            changing = false;
+        }
+        rubber.onmousedown = function(e) {
+            const x = e.clientX;
+            const y = e.clientY;
+
+            e.preventDefault();
+            rubberRectStart(x, y);
+        }
+        rubber.onmousemove = function(e) {
+            const x = e.clientX;
+            const y = e.clientY;
+
+            e.preventDefault();
+
+            if (dragging) {
+                // 移动圆心坐标
+                rubberRectStretch(x, y);
+            }
+        }
+        rubber.onmouseup = function(e) {
+            rubberRectEnd();
         }
         reset.onclick = function(e) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         }
-        img.src = './image/minions.jpg';
-        img.onload = function() {
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // 单文件选择
+        uploadFile.onchange = function(e) {
+            // const reader = new FileReader();
+            // reader.readAsDataURL(file);
+            //监听文件读取结束后事件
+            // reader.onloadend = function (e) {
+                // e.target.result; 是一个base64
+            // };
+            const file = e.target.files[0];
+            const img = document.createElement('img'); 
+            img.src = window.URL.createObjectURL(file);
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                moveRubberRect();
+                resizeRubberRect();
+                showRubberRect();
+            } 
         }
+        // ********initalization***********
+        const img1 = document.createElement('img'); 
+        img1.src = './image/minions.jpg';
+        img1.onload = function() {
+            ctx.drawImage(img1, 0, 0, canvas.width, canvas.height);
+            moveRubberRect();
+            resizeRubberRect();
+            showRubberRect();
+            setRubberRectBorderClickListener();
+        } 
+
     </script>
 </body>
 </html>
