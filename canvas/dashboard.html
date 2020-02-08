@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>仪表盘</title>
+    <style>
+        #canvas {
+            border: thin inset #aaaaaa;
+            display: inline-block;
+            margin: 50px 20px;
+        }
+
+        .canvas {
+            display: inline-block;
+            border: thin inset #aaaaaa;
+            margin: 50px 20px;
+        }
+
+        .btn-group {
+            position: absolute;
+            top: 20px;
+            left: 460px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" class="canvas" width="450" height="450"></canvas>
+    <script>
+        (function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const CENTROID_RADIUS = 10,
+                CENTROID_STROKE_STYLE = 'rgba(0,0,230,0.9)',
+                CENTROID_FILL_STYLE = 'rgba(80, 190, 240, 0.6)',
+                RING_INNER_RADIUS = 35,
+                RING_OUTER_RADIUS = 55,
+                ANNOTATIONS_FILL_STYLE = 'rgba(100, 140, 230, 0.9)',
+                ANNOTTAION_TEXT_SIZE = 14,
+                TICK_WIDTH = 14,
+                TICK_LONG_STROKE_STYLE = 'rgba(100, 140, 230, 0.9)',
+                TICK_SHORT_STROKING_STYLE = 'rgba(100, 140, 230, 0.5)',
+                TRACKING_DIAL_STROKING_STYLE = 'rgba(250, 250, 0, 0.6)',
+                GUIDEWIRE_STROKE_STYLE = 'goldenrod',
+                GUIDEWIRE_FILL_STYLE = 'rgba(250, 250, 0, 0.6)',
+                circle = {
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    radius: 150
+                }
+                function drawGrid(color, stepx, stepy) {
+                    ctx.save();
+                    ctx.shadowColor = undefined;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                    ctx.strokeStyle = color;
+                    ctx.fillStyle = '#fff';
+                    ctx.lineWidth = '0.5';
+                    ctx.fillRect(0, 0, 0, canvas.width, canvas.height);
+
+                    for (let i = stepx + 0.5; i < canvas.width; i += stepx) {
+                        ctx.beginPath();
+                        ctx.moveTo(i, 0);
+                        ctx.lineTo(i, canvas.height);
+                        ctx.stroke();
+                    }
+                    for (let i = stepy + 0.5; i < canvas.height; i += stepy) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, i);
+                        ctx.lineTo(canvas.width, i);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+                function drawDial () {
+                    // 清空画布
+                    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                    const { x,y } = circle;
+                    drawCentroid();
+                    drawCentroidGuidewire({ x,y });
+                    drawRing();
+                    drawTickInnerCircle();
+                    drawTicks();
+                    drawAnnotations();
+                }
+                // 中间的质心
+                function drawCentroid() {
+                    ctx.save()
+                    ctx.beginPath();
+                    ctx.strokeStyle = CENTROID_STROKE_STYLE;
+                    ctx.fillStyle = CENTROID_FILL_STYLE;
+                    ctx.arc(circle.x, circle.y, CENTROID_RADIUS, 0, Math.PI * 2, false);
+                    ctx.stroke();
+                    ctx.fill();
+                    ctx.restore();
+                }
+                // 中间的指针线
+                function drawCentroidGuidewire(loc) {
+                    let angle = (Math.PI * 2) * (new Date().getSeconds() / 60) - Math.PI / 2;
+                    let radius, endpt;
+                    // angle =  Math.PI / 4,
+                    radius = circle.radius + RING_OUTER_RADIUS;
+                    if (loc.x >= circle.x) {
+                        endpt = {
+                            x: circle.x + radius * Math.cos(angle),
+                            y: circle.y + radius * Math.sin(angle)
+                        };
+                    } else {
+                        endpt = {
+                            x: circle.x - radius * Math.cos(angle),
+                            y: circle.y - radius * Math.sin(angle)
+                        }
+                    }
+                    ctx.save();
+                    ctx.strokeStyle = GUIDEWIRE_STROKE_STYLE;
+                    ctx.fillStyle = GUIDEWIRE_FILL_STYLE;
+                    ctx.beginPath();
+                    ctx.moveTo(circle.x, circle.y);
+                    ctx.lineTo(endpt.x ,endpt.y);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.strokeStyle = TICK_LONG_STROKE_STYLE;
+                    ctx.arc(endpt.x, endpt.y, 5, 0, Math.PI * 2, false);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                function drawRing() {
+                    drawRingOuterCircle();
+                    ctx.strokeStyle = 'rgba(0,0,0.1)';
+                    ctx.beginPath();
+                    ctx.arc(circle.x, circle.y, circle.radius + RING_INNER_RADIUS, 0, Math.PI * 2, false);
+                    ctx.fillStyle =  'rgba(100, 140, 230, 0.1)';
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                // 外层大圈
+                function drawRingOuterCircle() {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)'
+                    ctx.shadowOffsetX = 3,
+                    ctx.shadowOffsetY = 3,
+                    ctx.shadowBlur = 6,
+                    ctx.strokeStyle = TRACKING_DIAL_STROKING_STYLE;
+                    ctx.beginPath();
+                    ctx.arc(circle.x, circle.y, circle.radius + RING_OUTER_RADIUS, 0 ,Math.PI * 2, true);
+                    ctx.stroke();
+                }
+                // 最内层刻度圈
+                function drawTickInnerCircle() {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.1)'
+                    ctx.arc(circle.x, circle.y, circle.radius + RING_INNER_RADIUS - TICK_WIDTH, 0, Math.PI * 2, false);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                function drawTick(angle, radius, cnt) {
+                    let tickWidth = cnt % 4 === 0? TICK_WIDTH : TICK_WIDTH / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(circle.x + Math.cos(angle) * (radius - tickWidth), circle.y + Math.sin(angle) * (radius - tickWidth));
+                    ctx.lineTo(circle.x + Math.cos(angle) * (radius), circle.y + Math.sin(angle) * (radius));
+                    ctx.strokeStyle = TICK_SHORT_STROKING_STYLE;
+                    ctx.stroke();
+                }
+                // 表盘刻度
+                function drawTicks() {
+                    let radius = circle.radius + RING_INNER_RADIUS, tickWidth;
+                    const ANGLE_MAX = 2 * Math.PI, ANGLE_DELTA = Math.PI / 64;
+                    ctx.save();
+                    for (let angle = 0, cnt = 0; angle < ANGLE_MAX; angle += ANGLE_DELTA, cnt++) {
+                        drawTick(angle, radius, cnt);
+                    }
+                    ctx.restore();
+                }
+                function drawAnnotations() {
+                    let radius = circle.radius + RING_INNER_RADIUS;
+                    ctx.save();
+                    ctx.fillStyle = ANNOTATIONS_FILL_STYLE;
+                    ctx.font = ANNOTTAION_TEXT_SIZE + "px HElvetica";
+                    // 弧度转角度
+                    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+                        ctx.beginPath();
+                        ctx.fillText((angle * 180 / Math.PI).toFixed(0),
+                            circle.x + Math.cos(angle) * (radius - TICK_WIDTH * 2),
+                            circle.y - Math.sin(angle) * (radius - TICK_WIDTH * 2))
+                    }
+                    ctx.restore();
+                }
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 4;
+                ctx.shadowBlur = 4;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                drawGrid('lightgray', 10, 10);
+                drawDial();
+                setInterval(function() {
+                    drawDial();
+                }, 1000);
+        })();
+    </script>
+</body>
+</html>

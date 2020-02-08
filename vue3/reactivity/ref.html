@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!--code here-->
+    <meta name="viewport" content="width=device-width,user-scalable=no">
+    <title>ref demo</title>
+    <style>
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+<script src="./reactivity.global.js"></script>
+<script>
+    const { ITERATE_KEY, computed, effect, isReactive, isReadonly, isRef, lock, markNonReactive, markReadonly, pauseTracking,
+        reactive, readonly, ref, resumeTracking, stop, toRaw, toRefs, unlock } = VueObserver;
+
+    // example 1
+    (function () {
+        const a = ref(1)
+        console.log('-- example 1 --')
+        console.log(a.value); // 1
+        let dummy
+        // ref是可以监测的
+        effect(() => {
+            dummy = a.value
+        })
+        console.log(dummy);// 1
+        a.value = 2
+        console.log(dummy);// 2
+    })();
+    // example 2
+    (function () {
+        // ref 是可以对深层嵌套对象进行监测
+        const a = ref({
+            count: 1
+        });
+        let dummy
+        effect(() => {
+            dummy = a.value.count
+        });
+        console.log('-- example 2 --')
+        console.log(dummy);// 1
+        a.value.count = 2
+        console.log(dummy);// 2
+    })();
+    // example 3
+    (function () {
+        // 在reactive中使用ref,ref会自动打开
+        const a = ref(1)
+        const obj = reactive({
+            a,
+            b: {
+                c: a,
+                d: [a]
+            }
+        })
+        let dummy1
+        let dummy2
+        let dummy3
+        effect(() => {
+            dummy1 = obj.a
+            dummy2 = obj.b.c
+            dummy3 = obj.b.d[0]
+        })
+        console.log('-- example 3 --')
+        console.log(dummy1)// 1
+        console.log(dummy2)// 1
+        console.log(dummy3)// 1
+        a.value++
+        console.log(dummy1)// 2
+        console.log(dummy2)// 2
+        console.log(dummy3)// 2
+        obj.a++
+        console.log(dummy1)// 3
+        console.log(dummy2)// 3
+        console.log(dummy3)// 3
+        obj.b.d[0]++;
+        console.log(dummy1)// 4
+        console.log(dummy2)// 4
+        console.log(dummy3)// 4
+    })();
+    // example 4
+    (function() {
+        // 对于嵌套的ref,会自动解开内部的ref
+        const a = ref(0)
+        const b = ref(a)
+        b.value++;
+        console.log('-- example 4 --')
+        console.log(typeof b.value)// number
+        console.log(a.value, b.value);// 1 1
+        a.value++;
+        console.log(a.value, b.value);// 2 2
+        // 对于嵌套的普通对象，会自动解开内部的ref
+        const c = ref({
+            d: ref(0)
+        });
+        console.log(typeof c.value.d);// number
+    })();
+    // example 5
+    (function() {
+        // 有value属性不一定就是ref
+        console.log('-- example 5 --')
+        console.log(isRef({ value: 0 }));// false
+        const a = reactive({
+            x: 1,
+            y: {
+                z: 2
+            }
+        });
+        // 将每个reactive的属性变成ref
+        const { x, y } = toRefs(a)
+        console.log(isRef(x))// true
+        console.log(isRef(y))// true
+        console.log(x.value)// 1
+        console.log(y.value)// Proxy: { z: 2 }
+        // source -> proxy
+        a.x++;
+        a.y.z++;
+        console.log(x.value) // 2
+        console.log(y.value.z)// 3
+        x.value++;
+        y.value.z++;
+        // proxy -> source
+        console.log(a.x);// 3
+        console.log(a.y.z);// 4
+    })();
+</script>
+</html>

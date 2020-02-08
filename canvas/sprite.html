@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>精灵图</title>
+    <style>
+    #canvas {
+        background: #fff;
+        border: thin inset #aaaaaa;
+        display: block;
+        margin: 50px auto 0;
+    }
+    </style>
+</head>
+<body>
+    <div id="readout"></div>
+    <canvas id="canvas" width="800" height="800"></canvas>
+    <script>
+        const readout = document.getElementById('readout'); 
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        function windowToCanvas(canvas, x, y) {
+            const box = canvas.getBoundingClientRect();
+            
+            return {
+                x: (x - box.left) * (canvas.width / box.width),
+                y: (y - box.top) * (canvas.height / box.height)
+            }
+        }
+        function drawBackground() {
+            let VERTICAL_LINE_SPACING = 12, i = canvas.height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'lightgray';
+            ctx.lineWidth = 0.5;
+            while(i > VERTICAL_LINE_SPACING * 4) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+                i -= VERTICAL_LINE_SPACING;
+            }
+        }
+        function drawSprite() {
+            ctx.drawImage(img, 0, 0);
+        }
+        function updateReadout(x, y) {
+            readout.innerText = `(${x.toFixed(0)},${ y.toFixed(0)})`;
+        }
+        // 辅助线
+        function drawGuideLine(x, y) {
+            ctx.strokeStyle = 'rgba(0, 0, 0, 230, 0.8)';
+            ctx.lineWidth = 0.5;
+            drawHorLine(y);
+            drawVertLine(x);
+        }
+        function drawHorLine(y) {
+            ctx.beginPath();
+            ctx.moveTo(0, y + 0.5);
+            ctx.lineTo(canvas.width, y + 0.5)
+            ctx.stroke();
+        }
+        function drawVertLine(x) {
+            ctx.beginPath();
+            ctx.moveTo(x + 0.5, 0);
+            ctx.lineTo(x + 0.5, canvas.height);
+            ctx.stroke();
+        }
+        canvas.onmousemove = function(e) {
+            const { x, y } = windowToCanvas(canvas, e.clientX, e.clientY);
+            drawBackground();
+            drawSprite();
+            drawGuideLine(x, y);
+            updateReadout(x, y);
+        }
+        img.src = './image/s_1.png';
+        img.onload = function() {
+            drawSprite();
+        }
+        drawBackground();
+    </script>
+</body>
+</html>

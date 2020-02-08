@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>利用剪辑区域减少重绘区域</title>
+    <style>
+        .canvas {
+            display: inline-block;
+            border: thin inset #aaaaaa;
+            margin: 50px 20px;
+        }
+
+        .btn-group {
+            position: absolute;
+            top: 20px;
+            left: 460px;
+        }
+
+        #play {
+            position: absolute;
+            left: 40px;
+            top: 30px;
+        }
+        .title {
+            position: absolute;
+            left: 40px;
+            top: -10px;
+        }
+    </style>
+</head>
+
+<body>
+    <p class="title">利用剪辑区域减少重绘区域</p>
+    <input type="button" value="play" id="play" />
+    <canvas id="canvas" class="canvas" width="800" height="400"></canvas>
+    <script>
+        (function () {
+            const btn = document.getElementById('play');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const discs = [
+                {
+                    x: 150,
+                    y: 250,
+                    lastX: 150,
+                    lastY: 250,
+                    velocityX: -3.2,
+                    velocityY: 3.5,
+                    radius: 25,
+                    innerColor: 'rgba(255, 255, 0, 1)',
+                    middleColor: 'rgba(255, 255, 0, 0.7)',
+                    outerColor: 'rgba(255, 255, 0, 0.5)',
+                    strokeStyle: 'gray'
+                },
+                {
+                    x: 50,
+                    y: 150,
+                    lastX: 50,
+                    lastY: 150,
+                    velocityX: 2.2,
+                    velocityY: 2.5,
+                    radius: 25,
+                    innerColor: 'rgba(100, 145, 230, 0.7)',
+                    middleColor: 'rgba(100, 145, 230, 0.7)',
+                    outerColor: 'rgba(100,145,230,0.5)',
+                    strokeStyle: 'blue'
+                },
+                {
+                    x: 150,
+                    y: 75,
+                    lastX: 150,
+                    lastY: 75,
+                    velocityX: 4.2,
+                    velocityY: 4.5,
+                    radius: 25,
+                    innerColor: 'rgba(255, 0, 0, 1)',
+                    middleColor: 'rgba(255, 0, 0, 0.7)',
+                    outerColor: 'rgba(255,0 ,0 ,0.5)',
+                    strokeStyle: 'orange'
+
+                }
+            ],
+                numDiscs = discs.length;
+            let paused = true;// 是否暂停
+            // 计算坐标
+            function update() {
+                let disc = null;
+                for (let i = 0; i < numDiscs; i++) {
+                    disc = discs[i];
+                    // 水平超出右边界 || 水平超出左边界 超出后进行反弹
+                    if (disc.x + disc.velocityX + disc.radius > canvas.width || disc.x + disc.velocityX - disc.radius < 0) {
+                        disc.velocityX = -disc.velocityX;
+                    }
+                    // 垂直超出下边界 || 水平超出上边界 超出后进行反弹
+                    if (disc.y + disc.velocityY + disc.radius > canvas.height || disc.y + disc.velocityY - disc.radius < 0) {
+                        disc.velocityY = -disc.velocityY;
+                    }
+                    disc.x += disc.velocityX;
+                    disc.y += disc.velocityY;
+                }
+            }
+            function draw() {
+                for (let i = 0; i < numDiscs; i++) {
+                    disc = discs[i];
+                    drawDiscBackground(disc);
+                    drawDisc(disc);
+                    disc.lastX = disc.x;
+                    disc.lastY = disc.y;
+                }
+            }
+            // 绘制圆盘
+            function drawDisc(disc) {
+                const gradient = ctx.createRadialGradient(disc.x, disc.y, 0, disc.x, disc.y, disc.radius);
+                gradient.addColorStop(0.3, disc.innerColor);
+                gradient.addColorStop(0.5, disc.middleColor);
+                gradient.addColorStop(1.0, disc.outerColor);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(disc.x, disc.y, disc.radius, 0, Math.PI * 2, true);
+                ctx.fillStyle = gradient;
+                ctx.strokeStyle = disc.strokeStyle;
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+            // 绘制圆盘轨迹
+            function drawDiscBackground(disc) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(disc.lastX, disc.lastY, disc.radius + 1, 0, Math.PI * 2, false);
+                // 扣出剪辑区域，后续操作都会在剪辑区域中进行
+                ctx.clip();
+                // 擦除背景(仅仅擦除剪辑区域所在的范围)
+                eraseBackground();
+                drawBackground();
+                // 重置剪辑区域
+                ctx.restore();
+            }
+            function drawBackground() {
+                var STEP_Y = 12,
+                    i = canvas.height;
+
+                ctx.strokeStyle = 'lightgray';
+                ctx.lineWidth = 0.5;
+
+                while (i > STEP_Y * 4) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                    i -= STEP_Y;
+                }
+
+                ctx.save();
+
+                ctx.strokeStyle = 'rgba(100,0,0,0.3)';
+                ctx.lineWidth = 1;
+
+                ctx.beginPath();
+
+                ctx.moveTo(35, 0);
+                ctx.lineTo(35, canvas.height);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+            function eraseBackground() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            function animate() {
+                if (!paused) {
+                    // eraseBackground();
+                    update();
+                    draw();
+                    window.requestAnimationFrame(animate);
+                }
+            }
+            btn.onclick = function () {
+                paused = !paused;
+                if (paused) {
+                    btn.value = 'play';
+                } else {
+                    btn.value = 'pause';
+                    window.requestAnimationFrame(animate);
+                }
+            }
+            startTime = +new Date;
+        })()
+    </script>
+</body>
+
+</html>

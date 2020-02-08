@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>map数据结构</title>
-</head>
-<body>
-<script>
-    'use strict'
-    /**
+/**
      * Map:键值对的集合，但是键的范围不仅仅局限于字符串（对象也可以）
      * 1.初始化
      * eg:var map=new Map([["name","tom"],["age","18"]]);
@@ -36,11 +27,10 @@
      * map.forEach(function(v,k,map){},context)
      * 注意上面第一个是value
      * */
-    var m=new Map();
-    var o={p:"11"};
-    m.set(o,"content");
-    console.log(m.has(o));
-    console.log(m.get(o));
-</script>
-</body>
-</html>
+// const o = { text: 'hellp' }
+const m = new Map([ [ 'name', 'tom' ], [ 'age', '18' ] ]);
+// 任何具有 Iterator 接口、且每个成员都是一个双元素的数组的数据结构（详见《Iterator》一章）都可以当作Map构造函数的参数
+var o = { p: '11' }
+m.set(o, 'content')
+console.log(m.has(o))
+console.log(m.get(o))

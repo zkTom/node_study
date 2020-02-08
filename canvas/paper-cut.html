@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>剪纸效果</title>
+    <style>
+        #canvas {
+            background: #ccc;
+            border: thin inset #aaaaaa;
+            display: inline-block;
+            margin: 50px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        function drawGrid(color, stepx, stepy) {                                                                                                                                                                                                       
+
+        }
+        function drawTwoArcs() {
+            ctx.beginPath();
+            // 根据非零环绕规则（是0就填充，不是0则不填充指定区域）
+            ctx.arc(50, 50, 25, 0, Math.PI * 2, false);
+            ctx.arc(50, 50, 50, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.shadowColor = undefined;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.stroke();
+        }
+        function drawTwoArcsWithoutLines() {
+            // 还是不行？？？？？
+            ctx.beginPath();
+            ctx.arc(200, 50, 25, 0, Math.PI * 2, false);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(200, 50, 50, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.shadowColor = undefined;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.stroke();
+        }
+        function drawTrianglePath() {
+            ctx.beginPath();
+            ctx.moveTo(50, 120);
+            ctx.lineTo(100, 200);
+            ctx.lineTo(10, 180);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid('lightgray', 10, 10);
+            ctx.save();
+            ctx.shadowOffsetX = 12;
+            ctx.shadowOffsetY = 12;
+            ctx.shadowColorBlur = 15;
+
+            drawTwoArcs();
+            drawTwoArcsWithoutLines();
+            drawTrianglePath();
+            ctx.restore();
+        }
+        ctx.fillStyle = 'rgba(100, 140, 230, 0.5)';
+        ctx.strokeStyle = ctx.fillStyle;
+        draw();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>坐标轴绘制</title>
+    <style>
+        #canvas {
+            border: thin inset #aaaaaa;
+            display: inline-block;
+            margin: 50px 20px;
+        }
+
+        .canvas {
+            display: inline-block;
+            border: thin inset #aaaaaa;
+            margin: 50px 20px;
+        }
+
+        .btn-group {
+            position: absolute;
+            top: 20px;
+            left: 460px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" class="canvas" width="400" height="400"></canvas>
+    <canvas id="canvas1" class="canvas" width="400" height="400"></canvas>
+    <canvas id="canvas2" class="canvas" width="400" height="400"></canvas>
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            function drawGrid(color, stepx, stepy) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 0.5;
+                for (let i = stepx + 0.5; i < canvas.width; i += stepx) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = stepy + 0.5; i < canvas.height; i += stepy) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+            }
+            drawGrid('lightgray', 10, 10);
+        })();
+    </script>
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas1');
+            const ctx = canvas.getContext('2d');
+            const AXIS_MARGIN = 40,
+                // 坐标原点
+                AXIS_ORIGIN = { x: AXIS_MARGIN, y: canvas.height - AXIS_MARGIN },
+                AXIS_TOP = AXIS_MARGIN, // 距离上面的距离
+                AXIS_RIGHT = canvas.width - AXIS_MARGIN,// 距离右边的距离
+                HORIZENTAL_TICK_SPACING = 10, // 坐标线之间的距离
+                VERTICAL_TICK_SPACING = 10, // 坐标线之间的距离
+                AXIS_WIDTH = AXIS_RIGHT - AXIS_ORIGIN.x,// 坐标轴长度
+                AXIS_HEIGHT = AXIS_ORIGIN.y - AXIS_TOP,// 坐标轴高度
+                NUM_VERTICAL_TICKS = AXIS_HEIGHT / VERTICAL_TICK_SPACING, // y轴线数量
+                NUM_HORIXONTAL_TICKS = AXIS_WIDTH / HORIZENTAL_TICK_SPACING,// X轴数量
+                TICK_WIDTH = 10, // ？？
+                TICKS_LINEWIDTH = 0.5, // 线宽
+                TICKS_COLOR = 'navy',// 线的颜色
+                AXIS_LINEWIDTH = 1.0,// 坐标轴的线度
+                AXIS_COLOR = 'blue';// 坐标轴的颜色
+
+            function drawGrid(context, color, stepx, stepy) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 0.5;
+                for (let i = stepx + 0.5; i < canvas.width; i += stepx) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = stepy + 0.5; i < canvas.height; i += stepy) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+            }
+            function drawAxes() {
+                ctx.save();
+                ctx.strokeStyle = AXIS_COLOR;
+                ctx.lineWidth = AXIS_LINEWIDTH;
+                drawHorizontalAxis();
+                drawVerticalAxis();
+                ctx.strokeStyle = TICKS_COLOR;
+                ctx.lineWidth = TICKS_LINEWIDTH;
+                drawHorizontalAxisTicks();
+                drawVerticalAxisTicks();
+                ctx.restore();
+            }
+            function drawHorizontalAxis() {
+                ctx.beginPath();
+                ctx.moveTo(AXIS_ORIGIN.x, AXIS_ORIGIN.y);
+                ctx.lineTo(AXIS_RIGHT, AXIS_ORIGIN.y);
+                ctx.stroke();
+            }
+            function drawVerticalAxis() {
+                ctx.beginPath();
+                ctx.moveTo(AXIS_ORIGIN.x, AXIS_ORIGIN.y);
+                ctx.lineTo(AXIS_ORIGIN.x, AXIS_TOP);
+                ctx.stroke();
+            }
+            function drawHorizontalAxisTicks() {
+                ctx.beginPath();
+                for (let i = 1, deltaX; i < NUM_HORIXONTAL_TICKS; i++) {
+                    if (i % 5 === 0) deltaX = TICK_WIDTH;
+                    else deltaX = TICK_WIDTH / 2;
+                    ctx.moveTo(AXIS_ORIGIN.x - deltaX, AXIS_ORIGIN.y - i * VERTICAL_TICK_SPACING);
+                    ctx.lineTo(AXIS_ORIGIN.x + deltaX, AXIS_ORIGIN.y - i * VERTICAL_TICK_SPACING);
+                    ctx.moveTo(AXIS_ORIGIN.x + i * HORIZENTAL_TICK_SPACING, AXIS_ORIGIN.y - deltaX);
+                    ctx.lineTo(AXIS_ORIGIN.x + i * HORIZENTAL_TICK_SPACING, AXIS_ORIGIN.y + deltaX);
+                    ctx.stroke();
+                }
+            }
+            function drawVerticalAxisTicks() {
+                ctx.beginPath();
+                for (let i = 1, deltaX; i < NUM_VERTICAL_TICKS; i++) {
+                    if (i % 5 === 0) deltaX = TICK_WIDTH;
+                    else deltaX = TICK_WIDTH / 2;
+                    ctx.moveTo(AXIS_ORIGIN.x - deltaX, AXIS_ORIGIN.y - i * VERTICAL_TICK_SPACING);
+                    ctx.lineTo(AXIS_ORIGIN.x + deltaX, AXIS_ORIGIN.y - i * VERTICAL_TICK_SPACING);
+                    ctx.stroke();
+                }
+
+            }
+            drawGrid(ctx, 'lightgray', 10, 10);
+
+            drawAxes();
+        })()
+    </script>
+    <script>
+            (function () {
+                const canvas = document.getElementById('canvas2');
+                const ctx = canvas.getContext('2d');
+                // 圆角矩形
+                // 分成4段画完arcTo
+                // (cornerX, cornerY)左上角坐标, width:宽度, height:高度; cornerRadius：圆角；（不能超过width/height 一半，一半的时候是圆形）
+                // 
+                function roundedRect(cornerX, cornerY, width, height, cornerRadius) {
+                    if (width > 0) ctx.moveTo(cornerX + cornerRadius, cornerY);
+                    else ctx.moveTo(cornerX - cornerRadius, cornerY);
+                    ctx.arcTo(cornerX + width, cornerY,
+                        cornerX + width, cornerY + height,
+                        cornerRadius);
+                    ctx.arcTo(cornerX + width, cornerY + height,
+                        cornerX, cornerY + height,
+                        cornerRadius);
+                    ctx.arcTo(cornerX, cornerY + height, cornerX, cornerY, cornerRadius);
+
+                    if (width > 0) {
+                        ctx.arcTo(cornerX, cornerY, cornerX + cornerRadius, cornerY, cornerRadius);
+                    } else {
+                        ctx.arcTo(cornerX, cornerY, cornerX - cornerRadius, cornerY, cornerRadius);
+                    }
+                }
+                function drawRoundedRect(strokeStyle, fillStyle, cornerX, cornerY, width, height, cornerRadius) {
+                    ctx.beginPath();
+                    roundedRect(cornerX, cornerY, width, height, cornerRadius);
+
+                    ctx.strokeStyle = strokeStyle;
+                    ctx.fillStyle = fillStyle;
+                    ctx.stroke();
+                    ctx.fill();
+                }
+                drawRoundedRect('blue', 'yellow', 0, 150, 50, 50, 10);
+                drawRoundedRect('blue', 'yellow', 100, 200, 50, -50, 20);
+                drawRoundedRect('purple', 'green', 250, 150, -50, 50, 25)
+                drawRoundedRect('red', 'white', 350, 200, -50, -50, 30)
+                ctx.beginPath();
+                ctx.strokeStyle = 'gray';
+                ctx.moveTo(200, 20);
+                ctx.lineTo(200, 130);
+                ctx.lineTo(50, 20);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 5;
+                ctx.moveTo(200, 20);
+                ctx.arcTo(200, 130, 50, 20, 40);
+                ctx.stroke();
+                // Start point
+                ctx.beginPath();
+                ctx.fillStyle = 'blue';
+                ctx.arc(200, 20, 5, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Control points
+                ctx.beginPath();
+                ctx.fillStyle = 'red';
+                ctx.arc(200, 130, 5, 0, 2 * Math.PI); // Control point one
+                ctx.arc(50, 20, 5, 0, 2 * Math.PI);   // Control point two
+                ctx.fill();
+            })()
+    </script>
+</body>
+
+</html>

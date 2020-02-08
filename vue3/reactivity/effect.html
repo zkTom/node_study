@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!--code here-->
+    <meta name="viewport" content="width=device-width,user-scalable=no">
+    <title>effect demo</title>
+    <style>
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+<script src="./reactivity.global.js"></script>
+<script>
+    const { ITERATE_KEY, computed, effect, isReactive, isReadonly, isRef, lock, markNonReactive, markReadonly, pauseTracking,
+        reactive, readonly, ref, resumeTracking, stop, toRaw, toRefs, unlock } = VueObserver;
+
+    // example 1
+    (function () {
+        // 在effect中可以进行依赖收集
+        console.log('-- example 1 --')
+        let dummy;
+        const counter = reactive({ num: 0 })
+        effect(() => {
+            console.log('should run first time');
+        });
+        effect(() => {
+            dummy = counter.num;
+        })
+        console.log(dummy); // 0
+        counter.num = 7;
+        console.log(dummy);// 7
+    })();
+    // example 2
+    (function () {
+        // 在effect中可以对多个属性进行依赖响应
+        // 多个effect也可以对一个属性进行依赖响应
+        console.log('-- example 2 --')
+        let dummy, dummy1
+        const counter = reactive({ num1: 0, num2: 0 })
+        effect(() => dummy1 = counter.num1)
+        effect(() => (dummy = counter.num1 + counter.num2))
+        console.log(dummy, dummy1)// 0 0
+        counter.num1 = 7
+        counter.num2 = 9
+        console.log(dummy, dummy1) // 16 7
+    })();
+    // exmaple 3
+    (function () {
+        // effect中可以对嵌套属性进行依赖响应
+        let dummy
+        console.log('-- example 3 --')
+        const counter = reactive({ nested: { num: 0 } })
+        effect(() => (dummy = counter.nested.num))
+        console.log(dummy)// 0
+        counter.nested.num = 7
+        console.log(dummy)// 7
+    })();
+    // exmaple 4
+    (function () {
+        // 可以监测delete操作符
+        // 可以监测in操作符
+        // 可以监测原型链上的属性
+        console.log('-- example 4 --')
+        let dummy
+        const obj = reactive({ prop: 'value' })
+        effect(() => (dummy = obj.prop))
+        console.log(dummy)// value
+        delete obj.prop
+        console.log(dummy)// undefined
+        console.log('prop' in obj) // false
+        obj.prop = 'value'
+        console.log(dummy)// value
+        console.log('prop' in obj)// true
+        const parentObj = reactive({ prop: 'patent value' })
+        Object.setPrototypeOf(obj, parentObj)
+        effect(() => (dummy = obj.prop))
+        console.log(dummy)// value
+        delete obj.prop
+        console.log(dummy)// parent value
+        parentObj.prop = 'parent value1'
+        console.log(dummy)
+        obj.prop = 'value'
+        console.log(dummy)// value
+    })();
+    // example 5
+    (function () {
+        let dummy
+        const counter = reactive({ num: 0 })
+        effect(() => (dummy = getNum()))
+
+        function getNum() {
+            return counter.num
+        }
+        console.log('-- example 5 --')
+        console.log(dummy)// 0
+        counter.num = 1
+        console.log(counter.num)// 1
+    })();
+    // example 6
+    (function () {
+        // 可以监测数组变化 push + shift + pop
+        // 可以监测数组的隐式变化arr[5] = ...
+        let dummy
+        const list = reactive(['Hello'])
+        effect(() => (dummy = list.join(' ')))
+        console.log('-- example 6 --')
+        console.log(dummy)// Hello
+        list.push('World!')
+        console.log(dummy)// Hello World!
+        list.shift()
+        console.log(dummy)// World!
+        list[1] = 'I am coming';
+        console.log(dummy)// World! I am coming
+        // 可以监测数组的循环变化
+        dummy = 0
+        const numbers = reactive({ num1: 3 })
+        effect(() => {
+            dummy = 0
+            for (let key in numbers) {
+                dummy += numbers[key]
+            }
+        })
+        console.log(dummy)// 3
+        numbers.num2 = 4
+        console.log(dummy)// 7
+        delete numbers.num1
+        console.log(dummy)// 4
+    })();
+    // example 7
+    (function () {
+        // 可以使用Symbol key作为 值
+        const key = Symbol('symbol keyed prop')
+        let dummy, hasDummy
+        const obj = reactive({ [key]: 'value' })
+        effect(() => (dummy = obj[key]))
+        effect(() => (hasDummy = key in obj))
+        console.log('-- example 7 --')
+        console.log(dummy);// value
+        console.log(hasDummy)// true
+        obj[key] = 'newValue'
+        console.log(dummy)// newValue
+        console.log(hasDummy)// true
+        delete obj[key]
+        console.log(dummy)// undefined
+        console.log(hasDummy)// false
+    })();
+    // example 8
+    (function () {
+        const oldFunc = () => { }
+        const newFunc = () => { }
+
+        let dummy
+        const obj = reactive({ func: oldFunc })
+        effect(() => (dummy = obj.func))
+        console.log('-- example 8 --')
+        console.log(dummy === oldFunc)// true
+        obj.func = newFunc
+        console.log(dummy === newFunc)// true
+    })();
+    // example 9
+    (function () {
+        // 非'reactive' or ‘ref' 属性不会进行依赖调用
+        let dummy
+        const obj = reactive({})
+        effect(() => (dummy = toRaw(obj).prop))
+        console.log('-- example 9 --')
+        console.log(dummy)// undefined
+        obj.prop = 'value'
+        console.log(dummy)// undefined
+    })();
+    // example 10
+    (function () {
+        // 非'reactive' or ‘ref' 属性不会进行依赖调用
+        let dummy
+        const obj = reactive({})
+        effect(() => (dummy = obj.prop))
+        console.log('-- example 10 --')
+        console.log(dummy)// undefined
+        toRaw(obj).prop = 'value'
+        console.log(dummy)// undefined
+    })();
+    // example 11
+    (function () {
+        // 不可以被继承的getters所触发,只能由自己的setter/getter触发
+        console.log('-- example 11 --')
+        let dummy, parentDummy, hiddenValue;
+        const obj = reactive({});
+        const parent = reactive({
+            set prop(value) {
+                hiddenValue = value
+            },
+            get prop() {
+                return hiddenValue;
+            }
+        })
+        Object.setPrototypeOf(obj, parent)
+        effect(() => (dummy = obj.prop))
+        effect(() => (parentDummy = parent.prop))
+        console.log(dummy)// undefined
+        console.log(parentDummy)// undefined
+        toRaw(obj).prop = 1
+        console.log(dummy)// undefined
+        console.log(parentDummy)// undefined
+    })();
+    // example 12
+    (function () {
+        console.log('-- example 12 --');
+        const counter = reactive({ num: 0 })
+        effect(() => counter.num++)// 这个函数只会执行一遍，不会循环调用
+        console.log(counter.num)// 1 
+    })();
+    // example 13
+    (function () {
+        // 可以显示的循环调用
+        const counter = reactive({ num: 0 })
+        console.log('-- example 13 --');
+        const numSpy = () => {
+            counter.num++
+            console.log('调用次数：', counter.num);
+            if (counter.num < 10) {
+                numSpy()
+            }
+        }
+        effect(numSpy)
+        console.log(counter.num) // 10
+    })();
+    // example 14
+    (function () {
+        // 避免依赖项互相循环调用
+        const nums = reactive({ num1: 0, num2: 1 })
+        const spy1 = () => {
+            console.log('调用spy1')
+            nums.num1 = nums.num2
+        }
+        const spy2 = () => {
+            console.log('调用spy2')
+            nums.num2 = nums.num1
+        }
+        console.log('-- example 14 --');
+        effect(spy1)
+        effect(spy2)
+        console.log(nums.num1, nums.num2)// 0 1
+        nums.num1 = 2
+        console.log(nums.num1, nums.num2)// 1 1
+        nums.num2 = 4
+        console.log(nums.num1, nums.num2)// 4 4
+    })();
+    // example 15
+    (function () {
+        function greet() {
+            return 'Hello World'
+        }
+        const effect1 = effect(greet)
+        const effect2 = effect(greet)
+        console.log('-- example 15 --');
+        console.log(effect1 !== effect2)// true
+    })();
+    // example 16
+    (function () {
+        let dummy
+        const obj = reactive({ prop: 'value', run: false })
+        effect(() => {
+            dummy = obj.run ? obj.prop : 'other'
+        })
+        console.log('-- example 16 --');
+        console.log(dummy)// other
+        obj.prop = 'test'
+        console.log(dummy)// other
+        obj.run = true
+        console.log(dummy)// test
+    })();
+    // example 17
+    (function () {
+        const runner = effect(() => { })
+        const otherRunner = effect(runner)
+        console.log('-- example 17 --');
+        console.log(runner !== otherRunner)// true
+        console.log(runner.raw === otherRunner.raw)// true
+    })();
+    // example 18
+    (function () {
+        // for循环中effect只会调用一次
+        let dummy
+        const obj = reactive({
+            value: 'hello',
+            state: 'success'
+        })
+        console.log('-- example 18 --');
+        const fnSpy = () => {
+            console.log('call fnSpy');
+            for (const key in obj) {
+                dummy = obj[key]
+            }
+        }
+        effect(fnSpy)
+        console.log(dummy)// success
+        obj.state = 'warning'
+        console.log(dummy)// warning
+    })();
+    // example 19
+    (function () {
+        // effect可以嵌套使用
+        const nums = reactive({ num1: 0, num2: 1, num3: 2 })
+        const dummy = {}
+
+        console.log('-- example 19 --');
+        const childSpy = () => {
+            console.log('call childSpy');
+            dummy.num1 = nums.num1
+        }
+        const childeffect = effect(childSpy)
+        const parentSpy = () => {
+            console.log('call parentSpy');
+            dummy.num2 = nums.num2
+            childeffect()
+            dummy.num3 = nums.num3
+        }
+        effect(parentSpy)
+        console.log(dummy)// { num1: 0, num2: 1, num3: 2 }
+        nums.num1 = 4
+        console.log(dummy)// { num1: 4, num2: 1, num3: 2 }
+        nums.num2 = 6
+        console.log(dummy)// { num1: 4, num2: 6, num3: 2 }
+    })();
+    // example 20
+    (function () {
+        // 使用lazy延迟调用effect
+        let dummy
+        const obj = reactive({ foo: 1 })
+        const runner = effect(() => (dummy = obj.foo), { lazy: true })
+        console.log('-- example 20 --');
+        console.log(dummy)// undefined
+        console.log(dummy)// 1
+        obj.foo = 2
+        console.log(dummy)// 2
+    })();
+    // example 21
+    (function () {
+        // 依赖改变后会触发scheduler，而不是effect函数
+        // 手动变动依赖，通过sheduler间接调用effect
+        let runner, dummy
+        console.log('-- example 21 --');
+        const scheduler = _runner => {
+            console.log('call scheduler')
+            runner = _runner
+        }
+        const obj = reactive({ foo: 1 })
+        effect(
+            () => {
+                dummy = obj.foo
+            },
+            { scheduler }
+        )
+        console.log(dummy);// 1
+        obj.foo++
+        console.log(dummy);// 1
+        runner()
+        console.log(dummy)// 2
+    })();
+    // example 22
+    (function () {
+        // onTrack可以追踪effect中的每个依赖
+        let events = []
+        let dummy
+        const onTrack = (e) => {
+            console.log('call onTrack', e);
+            events.push(e)
+        }
+        const obj = reactive({ foo: 1, bar: 2 })
+        const runner = effect(
+            () => {
+                dummy = obj.foo
+                dummy = 'bar' in obj
+                dummy = Object.keys(obj)
+            },
+            { onTrack }
+        )
+        console.log('-- example 22 --');
+        console.log(dummy)// [foo, bar]
+        console.log(events)
+        // events 结果如下
+        const equaledEvents = [
+            {
+                effect: runner,
+                target: toRaw(obj),
+                type: 'get',
+                key: 'foo'
+            },
+            {
+                effect: runner,
+                target: toRaw(obj),
+                type: 'has',
+                key: 'bar'
+            },
+            {
+                effect: runner,
+                target: toRaw(obj),
+                type: 'iterate',
+                key: ITERATE_KEY
+            }
+        ]
+    })();
+    // example 23
+    (function () {
+        // onTrigger会初始化执行一次
+        console.log('-- example 23 --');
+        let events = []
+        let dummy
+        const onTrigger = (e) => {
+            console.log('call onTrigger', e)
+            events.push(e)
+        }
+        const obj = reactive({ foo: 1 })
+        const runner = effect(
+            () => {
+                dummy = obj.foo
+            },
+            { onTrigger }
+        )
+
+        obj.foo++
+        console.log(dummy)// 2
+        console.log(events[0])
+        // 结果如下
+        let o = {
+            effect: runner,
+            target: toRaw(obj),
+            type: 'set',
+            key: 'foo',
+            oldValue: 1,
+            newValue: 2
+        }
+        delete obj.foo
+        console.log(dummy)// undefined
+        console.log(events[1])
+        // 结果如下
+        o = {
+            effect: runner,
+            target: toRaw(obj),
+            type: 'delete',
+            key: 'foo',
+            oldValue: 2
+        }
+    })();
+    // example 24
+    (function () {
+        // stop可以停止对effect的监测，但是仍然可以手动调用
+        // onStop是停止监测effect后的回调
+        console.log('-- example 24 --');
+        let dummy
+        const obj = reactive({ prop: 1 })
+        const onStop = () => {
+            console.log('call onStop')
+        }
+        const runner = effect(() => {
+            dummy = obj.prop
+        }, { onStop })
+        obj.prop = 2
+        console.log(dummy)// 2
+        stop(runner)
+        obj.prop = 3
+        console.log(dummy)// 2
+        runner()
+        console.log(dummy)// 3
+    })();
+    // example 25
+    (function () {
+        // markNonReactive：停止对某个属性的监测
+        console.log('-- example 25 --');
+        const obj = reactive({
+            foo: markNonReactive({
+                prop: 0
+            })
+        })
+        let dummy
+        effect(() => {
+            dummy = obj.foo.prop
+        })
+        console.log(dummy)// 0
+        obj.foo.prop = 1;
+        console.log(dummy)// 0
+        obj.foo = {
+            prop: 1
+        }
+        console.log(dummy)// 1
+    })();
+    // 这个测试的是？
+    // it('should not observe set operations without a value change', () => {
+    //     let hasDummy, getDummy
+    //     const obj = reactive({ prop: 'value' })
+
+    //     const getSpy = jest.fn(() => (getDummy = obj.prop))
+    //     const hasSpy = jest.fn(() => (hasDummy = 'prop' in obj))
+    //     effect(getSpy)
+    //     effect(hasSpy)
+
+    //     expect(getDummy).toBe('value')
+    //     expect(hasDummy).toBe(true)
+    //     obj.prop = 'value'
+    //     expect(getSpy).toHaveBeenCalledTimes(1)
+    //     expect(hasSpy).toHaveBeenCalledTimes(1)
+    //     expect(getDummy).toBe('value')
+    //     expect(hasDummy).toBe(true)
+    // })
+</script>
+
+</html>

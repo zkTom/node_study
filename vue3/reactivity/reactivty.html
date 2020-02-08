@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!--code here-->
+    <meta name="viewport" content="width=device-width,user-scalable=no">
+    <title>demo</title>
+    <style>
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+    </div>
+</body>
+<script src="./reactivity.global.js"></script>
+<script>
+    const { ITERATE_KEY, computed, effect, isReactive, isReadonly, isRef, lock, markNonReactive, markReadonly, pauseTracking,
+        reactive, readonly, ref, resumeTracking, stop, toRaw, toRefs, unlock } = VueObserver;
+
+    // example 1
+    (function () {
+        const original = { foo: 1 };
+        const observed = reactive(original);
+        observed.bar = 1;
+        console.log('-- example 1 --')
+        observed.foo // 1
+        'foo' in observed // true
+        Object.keys(observed) // ['foo']
+        console.log(observed.bar) // 1
+        console.log(original.bar) // 1
+        delete observed.foo
+        console.log('foo' in observed) // false
+        console.log('foo' in original) // false
+    })();
+    // example 2
+    (function () {
+        const arr = [{ foo: 1 }];
+        const observedArr = reactive(arr)
+        const cloneArr = observedArr.slice();
+        console.log('-- example 2 --');
+        console.log(arr === observedArr); // false
+        console.log(observedArr[0]); // { foo: 1 }
+        console.log(0 in observedArr); // true
+        console.log(Object.keys(observedArr));// ["0"]
+        console.log(cloneArr[0] === observedArr[0]); // true
+        console.log(cloneArr[0] === arr[0]); // false
+        const value = { baz: 3 }
+        const reactiveValue = reactive(value);
+        // 监测数组代理原数组的所有操作,对监测数组的修改也会反应到原数组上
+        observedArr[0] = value;
+        console.log(observedArr[0] === reactiveValue);// true
+        console.log(arr[0] === value);// true
+        delete observedArr[0];
+        console.log(observedArr[0] === undefined);// true
+        console.log(arr[0] === undefined);// true
+        observedArr.push(value);
+        console.log(observedArr[1] === reactiveValue);// true
+        console.log(arr[1] === value);// true
+    })();
+    // example 3
+    (function () {
+        // 给一个监测对象添加一个未被监测的属性，这个属性会自动被包裹成reactive属性
+        const observed = reactive({});
+        const raw = {}
+        observed.foo = raw;
+        // 如果之前已经有原对象的监测对象则不会新创建监测对象，而是修改指向
+        const rawOb = reactive(raw);
+        // 对同一个对象的多次监测，返回同一个监测对象
+        const rawOb1 = reactive(raw);
+        console.log('-- example 3 --');
+        console.log(isReactive(observed.foo));// true
+        console.log(observed.foo === raw); // false
+        console.log(observed.foo === rawOb); // true
+        console.log(rawOb === rawOb1); // true
+    })();
+    // example 4
+    (function () {
+        // 不会破坏被代理的原对象
+        const original = { foo: 1 }
+        const original2 = { bar: 2 }
+        const observed = reactive(original)
+        const observed2 = reactive(original2)
+        observed.bar = observed2
+        console.log('-- example 4 --');
+        console.log(observed.bar === observed2);// true
+        console.log(original.bar === original2);// true
+    })();
+    // example 5
+    (function() {
+        // 将监测对象转变为原对象
+        const original = { foo: 1 }
+        const observed = reactive(original)
+        console.log('-- example 5 --');
+        console.log(toRaw(observed) === original);// true
+        console.log(toRaw(original) === original);// true
+    })();
+    // example 6
+    (function() {
+        // 不应该打开ref<T>
+        const numberRef = ref(1)
+        const objectRef = ref({ foo: 1 })
+        const observedNumberRef = reactive(numberRef)
+        const observedObjectRef = reactive(objectRef)
+        console.log('-- example 6 --');
+        console.log(isRef(observedNumberRef));// true ???
+        console.log(isRef(observedObjectRef));// true ???
+    })();
+    // example 7
+    (function() {
+        // 不能进行监测的数据类型
+        // number/string/undefined/null/Symbol
+        // Promise/RegExp/Date 返回原值
+        console.log('-- example 7 --');
+        reactive(1);
+        reactive("str");
+        reactive(undefined);
+        reactive(null);
+        reactive(Symbol());
+        const p = Promise.resolve()
+        const r = new RegExp('')
+        const d = new Date()
+        console.log(reactive(p) === p);// true
+        console.log(reactive(r) === r);// true
+        console.log(reactive(d) === d);// true
+    })();
+    // example 8
+    (function() {
+        // 将某个属性标记为非监测属性
+        const obj = reactive({
+            foo: { a: 1 },
+            bar: markNonReactive({ b: 2 })
+        });
+        console.log('-- example 8 --');
+        console.log(isReactive(obj.foo));// true
+        console.log(isReactive(obj.bar));// false
+    })();
+</script>
+
+</html>

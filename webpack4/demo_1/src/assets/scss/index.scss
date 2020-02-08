@@ -1,0 +1,17 @@
+@import './home.scss';
+
+.para {
+    font-size: 32px;
+    color: $--text-color;
+
+    .title {
+        font-size: 40px;
+        color: greenyellow;
+    }
+}
+.li {
+    background: red;
+}
+.li:nth-child(odd) {
+    background: blue;
+}
