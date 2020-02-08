@@ -34,3 +34,7 @@ export default (state = defaultState, action) => {
         default: return state
     }
 }
+//导出一些getters
+export function getList(state){
+    return state.list
+}
