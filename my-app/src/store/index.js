@@ -4,6 +4,30 @@ import {
     compose,
     combineReducers
 } from 'redux'
+/**
+ * javascript Array.prototype.reduce(callback, initValue)
+ * 根据initValue和callback进行一次迭代，将得到的值最为下次开始的initValue，再次调用callback，
+ * 知道Array每个元素循环一边
+ * eg:
+ * [1, 10, 100].reduce((sum = 0, num) => (sum + num), 0)
+ */
+/**
+ * 根据上面可知，combineReducers大致实现过程
+ * const combineReducers = ( reducers ) => {
+    return ( state = {}, action ) => {
+        return Object.keys(reducers).reduce(
+            ( nextState, key ) => {
+                nextState[key] = reducers[key](
+                    state[key],
+                    action
+                );
+                return nextState;
+            },
+            {}
+        );
+    };
+};
+ */
 import todoReducer from './reducer'
 import createSagaMiddleware from 'redux-saga'
 import sagas from './saga'
