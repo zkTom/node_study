@@ -12,4 +12,4 @@ requset.body
 
 cookie
 名称，k/v 过期时间(ms)
-res.cookie('user',{username:re.query.name},{maxAge:1000*60});这是用来测试的这是用来测试的这是用来测试的
+res.cookie('user',{username:re.query.name},{maxAge:1000*60});

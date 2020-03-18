@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas旋转，平移和缩放</title>
+</head>
+<style>
+        .canvas {
+            display: inline-block;
+            border: thin inset #aaaaaa;
+            margin: 50px 20px;
+        }
+
+        .btn-group {
+            position: absolute;
+            top: 20px;
+            left: 460px;
+        }
+        .btn-group-1 {
+            margin-left: 20px;
+            width: 400px;
+        }
+        .select {
+            margin-right: 20px;
+            margin-bottom: 20px;
+        }
+</style>
+<body>
+    <canvas id="canvas" class="canvas" width="400" height="400"></canvas>
+</body>
+<script>
+    (function () {
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width = 100, height = 100;
+        const Point = function(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        // ******* functions **********
+        function drawOuterCircle(centerX, centerY, radius) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, Math.PI * 2, 0);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+        function getPolygonPoints(centerX, centerY, radius, sides, startAngle = 0) {
+            const points = [];
+            let angle = startAngle;
+            for (let i = 0; i < sides; i++) {
+                const point = new Point(centerX + radius * Math.sin(angle), centerY - radius * Math.cos(angle));
+                points.push(point);
+                angle += Math.PI * 2 / sides;
+            }
+            return points;
+        }
+        function createPolygonPath(centerX, centerY, radius, sides, startAngle) {
+            const points = getPolygonPoints(centerX, centerY, radius, sides, startAngle);
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for( let i = 1; i < sides; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+        // *******************init*******************
+        const p0 = new Point(200, 200);
+        const r0 = 150;
+        drawOuterCircle(p0.x, p0.y, r0);
+        createPolygonPath(p0.x, p0.y, r0, 6, 0);
+        ctx.translate(200, 200);
+        ctx.rotate(Math.PI / 180 * 90);
+        ctx.scale(0.5, 0.5);
+        ctx.fillStyle = 'red';
+        // todo 找一个好点的演示demo重做
+        createPolygonPath(0,0 , r0, 6, 0);
+    })();
+</script>
+</html>
