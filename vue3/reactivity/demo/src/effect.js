@@ -1,7 +1,7 @@
 // targetMap 保存原始对象以及他们的依赖映射
 // key: target val: depsMap
 // depsMap  保存依赖关系
-// key: target对象键名 val: effect数组
+// key: target对象键名 val: effect数组(又叫做dep)
 // 完成了 target => key => dep 的关系建立
 const targetMap = new WeakMap()
 const effectStack = []
@@ -10,7 +10,7 @@ export function track(target, operationType, key) {
 	const effect = effectStack[effectStack.length - 1]
 	if (effect) {
 		let depsMap = targetMap.get(target)
-		if (depsMap === void 0) {
+		if (depsMap === void 0) {                                                                                                                                     
 			targetMap.set(target, (depsMap = new Map()))
 		}
 
