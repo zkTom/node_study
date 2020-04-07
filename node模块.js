@@ -9,7 +9,6 @@ console.log(__filename);
 console.log(__dirname);
 //process对象 node进程的工作目录(根目录)
 console.log(process.cwd());
-fs.open('F:/myproject/myblogServer/public/cover2/1.txt', 'w+', (err, fd) => {
-      if (err) throw err;
-    
-    });
+// fs.open('F:/myproject/myblogServer/public/cover2/1.txt', 'w+', (err, fd) => {
+//       if (err) throw err;
+// });

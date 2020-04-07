@@ -1,3 +1,9 @@
+/**
+ * 精灵模拟
+ * @param {*} name 
+ * @param {*} painter 
+ * @param {*} behaviors 
+ */
 function Sprite(name, painter, behaviors) {
     this.name = name;
     this.painter = painter;
