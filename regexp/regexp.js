@@ -8,10 +8,6 @@ console.log('[100.00]', reg.test('100.00'))
 console.log('[1.011]', reg.test('1.011'))
 console.log('[011.11]', reg.test('011.11'))
 console.log('[1.11.11]', reg.test('1.11.11'))
-// 手机号匹配
-arr = [ '15128061822', '15064255067', '13703207765', '151280618233', '15403207763' ]
-let phoneReg = /^(13[0-9]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}$/
-arr.forEach((item) => console.log(`[${item}]:${phoneReg.test(item)}`))
 // 邮箱
 let mailReg = /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/
 // 身份证
@@ -54,6 +50,7 @@ function checkCode(val) {
 	return false
 }
 // 检查身份证日期
+// val 6-14位
 function checkDate(val) {
 	var pattern = /^(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)$/
 	if (pattern.test(val)) {
@@ -112,4 +109,31 @@ function checkProv(val) {
 		}
 	}
 	return false
+}
+/**
+ * 校验身份证号（严格校验）
+ */
+function checkIdCard(value) {
+    let flag = false;
+    if(typeof value !== 'string' || value.length !== 18) {
+        flag = false;
+    } else {
+        let date = value.substring(6, 14);
+        let code = value.substring(0, 2);
+        flag = checkCode(value) && checkDate(date) && checkProv(code);
+    }
+    return flag;
+}
+// 检查手机号(不以86开头)
+// arr = [ '15128061822', '15064255067', '13703207765', '151280618233', '15403207763' ]
+function checkPhone(value) {
+    let  flag = false;
+    if (typeof value !== 'string' || value.length !== 11) {
+        flag = false;
+    } else {
+        // const reg = /^(13[0-9]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}$/
+        const reg = /^1[3|4|5|6|7|8|9][0-9]\d{8}$/;
+        flag = reg.test(value);
+    }
+    return flag;
 }
