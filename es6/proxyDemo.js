@@ -8,16 +8,28 @@
  * Handler: 主要存储代理对象的代理操作
  * 主要操作如下：
  * handler.getPrototypeOf() => Object.getPrototypeOf.
+ * 
  * handler.setPrototypeOf() => Object.setPrototypeOf.
+ * 
  * handler.isExtensible() => Object.isExtensible.
+ * 
  * handler.preventExtensions() => Object.preventExtensions.
+ * 
  * handler.getOwnPropertyDescriptor() => Object.getOwnPropertyDescriptor.
+ * 
  * handler.defineProperty() => Object.defineProperty.
+ * 
  * handler.has() => the in operator.
  * has: function(target, prop) {}
  * @param target 目标对象
  * @param prop 需要检查是否存在的属性
+ * 
  * handler.get() => getting property values.
+ * get: function(target, property, receiver) {}
+ * @param target
+ * @param property
+ * @param receiver
+ * 
  * handler.set() => setting property values.
  * set: function(target, property, value, receiver) {}
  * @param target: 目标对象
@@ -25,13 +37,21 @@
  * @param value
  * @param receiver:最初被调用的对象。通常是 proxy 本身，但 handler 的 set 方法也有可能在原型链上，或以其他方式被间接地调用（因此不一定是 proxy 本身）
  * @returns { boolean } true表示属性设置成功
+ * 
  * handler.deleteProperty() => the delete operator.
+ * deleteProperty: function(target, property) {}
+ * @param target 目标对象
+ * @param property 待删除的属性名
+ * @return { boolean } 返回一个 Boolean 类型的值，表示了该属性是否被成功删除
+ * 
  * handler.ownKeys() => Object.getOwnPropertyNames and Object.getOwnPropertySymbols.
+ * 
  * handler.apply() => a function call.
  * apply: function(target, thisArg, argumentsList) {}
  * @param target 目标对象
  * @param thisArg 被调用时的上下文对象
  * @param argumentsList 被调用时的参数数组
+ * 
  * handler.construct() => the new operator.
  * construct: function(target, argumentsList, newTarget) {}
  * @param target 目标对象
@@ -161,6 +181,22 @@
     console.log(person.name);// Tom
     console.log(personProxy.name);// Li Ming
 })();
-
-
+(function() {
+    console.log("-- example6 --");
+    const target = {
+        name: 'Tom'
+    }
+    // 拦截delete命令
+    const handler = {
+        deleteProperty: function(target, prop) {
+            console.log("called: " + prop);
+            delete target[prop];
+            return true;
+        }
+    }
+    const p = new Proxy(target, handler);
+    delete p.name
+    // delete Reflect.deleteProperty(p, 'name');
+    console.log(p.name);
+})();
 
