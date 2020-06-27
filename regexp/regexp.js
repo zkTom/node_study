@@ -27,6 +27,12 @@ arr = [ '127.0.0.1', '191.255.255.255', '239.255.255.255', '192.168.0.20', '0.0.
 let ipReg = /^\d+\.\d+\.\d+\.\d+$/
 let ipReg1 = /((?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d))/
 arr.forEach((item) => console.log(`[${item}]:${ipReg1.test(item)}`))
+// socket地址截取
+const str = 'http://183.196.90.14:4042/';
+const socketUrlReg = /(https?):\/\/(\d+\.\d+\.\d+\.\d+):(\d+)\/(\w*)/;
+// 0: "http://183.196.90.14:4042/"1: "http,"2: "183.196.90.14",3: "4042",4: "",groups: undefined,index: 0,input: "http://183.196.90.14:4042/",length: 5
+const socketUrlResult = ss.match(socketUrlReg);
+
 // HTML标签过滤
 arr = [ '<script>var a = 1;</script>' ]
 let htmlTagReg = /<(\S*?)[^>]*>.*?<\/\1>|<.*? \/>/

@@ -53,3 +53,13 @@ sam.move();
 tom.move(34);
 console.log(sam.name);
 // console.log(tom.name); // 错误
+
+class RSocket {
+    constructor(r: any) {
+        console.log(r);
+    }
+    
+}
+
+const b = RSocket.builder();
+b.host('test').namespace('nsp').port('22').timeout(5000).build();
