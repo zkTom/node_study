@@ -1,5 +1,4 @@
 # webpack vue 单页面打包的配置学习
-
 ## 资源结构
 |- /assets
 |– /components
