@@ -9,6 +9,8 @@
 // babel-polyfill
 // babel 默认只转换 js 语法，而不转换新的 API，比如 Iterator、Generator、Set、Maps，Promise 等全局对象，
 // 以及一些定义在全局对象上的方法(比如 Object.assign)都不会转码,这个时候如果要使用API就要用babel-polyfill
+// 对于esModule语法，babel只能转化为commonjs语法【编译】，但是不能运行在浏览器环境，还需要进行webpack【打包bundle】
+// 经过打包处理之后就可以运行在浏览器上。
 module.exports = function(api) {
 	api.cache(true);
     // api.cache(true) - Same as api.cache.forever()

@@ -36,7 +36,27 @@
 //        s.delete(7)
 //        console.log(s)
 //        console.log(s.has(7))
-
+/**
+ * Array.reduce
+ * str: 要过滤关键字的字符串
+ * keyword: 关键字
+*/
+function empKeyword(str, keyword) {
+    if (typeof str !='string' || str.length === 0) {
+      return '/'
+    }
+    if (typeof keyword !='string' || keyword.length === 0) {
+      return str;
+    }
+    const s = str.split(keyword).reduce((pre, cur, i) => {
+        if (!i) return [current];
+        return pre.concat(`<strong style="color: red;">${keyword}</strong>`, cur);
+    })
+    return s;
+}
+const p = document.createElement('p');
+p.innerHTML = empKeyword('i am a boy, a happy boy, but you are not happy, you are sad boy.', 'boy');
+document.body.appendChild(p);
 </script>
 </body>
 </html>

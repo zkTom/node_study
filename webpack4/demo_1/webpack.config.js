@@ -26,6 +26,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
  * 2.
  */
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyPlugin = require("copy-webpack-plugin");
 module.exports = {
 	mode: 'development',
 	// context: path.resolve(__dirname),
@@ -34,9 +35,9 @@ module.exports = {
 	},
 	output: {
 		// publicPath: '',// 当在服务器配置虚拟路径映射时用来添加前缀
-		filename: 'bundle.js',
+		filename: '[name].[hash:8].bundle.js',
 		path: path.resolve(__dirname, 'dist'),
-		chunkFilename: '[name].js'
+		chunkFilename: '[name].js',
 	},
 	// 告诉webpack如何去解析模块
 	resolve: {
@@ -55,7 +56,7 @@ module.exports = {
 		port: 8080,
 		// 热更新不刷新页面
 		hot: true,
-		hotOnly: true
+		hotOnly: true,
 	},
 	// loader执行顺序，从下到上，从右到左
 	module: {
@@ -286,6 +287,9 @@ module.exports = {
 			// }
 		}),
 		new CleanWebpackPlugin(),
-		new webpack.HotModuleReplacementPlugin()
+		new webpack.HotModuleReplacementPlugin(),
+		new CopyPlugin([
+        { from: __dirname + "/public", to: __dirname + "/dist"},
+		])
 	]
 }
